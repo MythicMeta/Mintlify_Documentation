@@ -58,7 +58,7 @@ Creating your own command requires extending this CommandBase class (i.e. `class
 * `needs_admin` - this is a boolean indicator for if this command requires admin permissions
 * `help_cmd` - this is the help information presented to the user if they type `help [command name]` from the main active callbacks page
 * `description` - this is the description of the command. This is also presented to the user when they type help.
-* `suported_ui_features` - This is an array of values that indicates where this command might be used within the UI. For example, from the active callbacks page, you see a table of all the callbacks. As part of this, there's a dropdown you can use to automatically issue an `exit` task to the callback. How does Mythic know which command to actually send? It's this array that dictates that. The following are used by the callback table, file browser, and process listing, but you're able to add in any that you want and leverage them via browser scripts for additional tasking:
+* `supported_ui_features` - This is an array of values that indicates where this command might be used within the UI. For example, from the active callbacks page, you see a table of all the callbacks. As part of this, there's a dropdown you can use to automatically issue an `exit` task to the callback. How does Mythic know which command to actually send? It's this array that dictates that. The following are used by the callback table, file browser, and process listing, but you're able to add in any that you want and leverage them via browser scripts for additional tasking:
   * supported\_ui\_features = \["callback\_table:exit"]
   * supported\_ui\_features = \["file\_browser:list"]
   * supported\_ui\_features = \["process\_browser:list"]
@@ -160,7 +160,7 @@ As part of the `TaskArguments` subclass, you have access to the following pieces
 * `self.raw_command_line` - the original parameters that the user typed out. This is useful in case you have additional pieces of information to process or don't want information processed into the standard JSON/Dictionary format that Mythic uses.
 * `self.tasking_location` - this indicates where the tasking came from
 * `self.task_dictionary` - this is a dictionary representation of the task you're parsing the arguments for. You can see things like the initial `parameter_group_name` that Mythic parsed for this task, the user that issued the task, and more.
-* `self.parameter_group_name` - this allows you to manually specify what the parameter group name should be. Maybe you don't want Mythic to do automatic parsing to determine the parameter group name, maybe you have additional pieces of data you're using to determine the group, or maybe you plan on adjusting it alter on. Whatever the case might be, if you set `self.parameter_group_name = "value"`, then Mythic won't continue trying to identify the parameter group based on the current parameters with values.
+* `self.parameter_group_name` - this allows you to manually specify what the parameter group name should be. Maybe you don't want Mythic to do automatic parsing to determine the parameter group name, maybe you have additional pieces of data you're using to determine the group, or maybe you plan on adjusting it later on. Whatever the case might be, if you set `self.parameter_group_name = "value"`, then Mythic won't continue trying to identify the parameter group based on the current parameters with values.
 
 The class **must** implement the `parse_arguments` method and define the `args` array (it can be empty). This `parse_arguments` method is the one that allows users to supply "short hand" tasking and still parse out the parameters into the required JSON structured input. If you have defined command parameters though, the user can supply the required parameters on the command line (via `-commandParameterName` or via the popup tasking modal via `shift+enter`).
 
@@ -241,7 +241,7 @@ class CommandParameter:
   * ChooseOne - gets a string value
   * ChooseMultiple
     * An Array of string values
-  * ChooseOneCustom - gets a string value from a list of `choices` OR a user spplied value
+  * ChooseOneCustom - gets a string value from a list of `choices` OR a user supplied value
   * Credential\_JSON
     * Select a specific credential that's registered in the Mythic credential store. In your create tasking, get a JSON representation of all data for that credential
   * Number&#x20;
@@ -368,3 +368,9 @@ In the above code block, we're searching for files, not getting their contents, 
 ### Processing Order
 
 So, with all that's going on, it's helpful to know what gets called, when, and what you can do about it.
+
+When you send a task to Mythic (from a modal, typing it out, via scripting, etc), the first thing that happens is Mythic stores it in the database. A bunch of data around a task (associated callback, payload, c2, etc) is sent to the PayloadType container for processing. This container first creates an instance of your command's TaskArguments function and passes it the database data. It then calls either the `parse_dictionary` or `parse_arguments` functions depending on if the `params` it has are JSON or not and if the `parse_dictionary` function is even provided. At this point, your code has been invoked to help fill out and set some of the parameters.&#x20;
+
+The PayloadType container then does a check to see which parameters were explicitly set, and based on that, which parameter group is being used. If that can't be determined, then an exception is thrown. Otherwise, any non-required parameters for that parameter group get their default values that weren't already explicitly set. If there's a required parameter that hasn't been explicitly set though, then another exception is thrown.&#x20;
+
+Once all of that parsing is done, that finalized TaskArguments class is attached to an instance of your Command's class and first, that Command's `opsec_pre` function is called. If that returns that everything is good to go, all of the above stuff happens again, but then your Command's `create_go_tasking` function is called. If that one returns success, then your Command's `opsec_post` function is called. If that also returns success, then your task is finally in the `Submitted` state and ready for an agent to pick it up. If your command is `script_only=True` though, then at this point your task is flipped to completed and not picked up by the agent.

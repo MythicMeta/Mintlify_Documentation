@@ -73,6 +73,7 @@ We have another component to the `post_response` for agents.
                 "modify_time": unix epoc time in milliseconds,
                 "size": 1345, //size of the entity
                 "update_deleted": True, //optional
+                "set_as_user_output": False, // optional
                 "files": [ // if this is a folder, include data on the files within
                     {
                         "is_file": True or False,
@@ -98,6 +99,8 @@ If you're listing out the top level folder (`/` on linux/macOS or a drive like `
 {% endhint %}
 
 Most of this is pretty self-explanatory, but there are some nuances. Only list out the inner files for the initial folder/file listed (i.e. don't recursively do this listing). For the `files` array, you don't need to include `host` or `parent_path` because those are both inferred based on the info outside the `files` array, and the `success` flag won't be included since you haven't tried to actually list out the contents of any sub-folders. The permissions JSON blob allows you to include any additional information you want to show the user in the file browser. For example, with the `apfell` agent, this blob includes information about extended attributes, posix file permissions, and user/group information. Because this is heavily OS specific, there's no requirement here other than it being a JSON blob (not a string).
+
+The `set_as_user_output` field is new as of Mythic 3.3.1-rc23. It was relatively common practice for people to return this file browser data, but also return a string version in the `user_output` field to be displayed to the user. This means that you're sending the same data back twice though and bloating the size of your messages. This new flag tells Mythic to take this structured data, turn it into a JSON string, and add it as a response output for this task. This way your agent doesn't have to explicitly send it, but you still get the benefit.
 
 By having this information in _another_ component within the responses array, you can display any information to the user that you want without being forced to _also_ display this listing each time to the user. You can if you want, but it's not required. If you wanted to do that, you could simply turn all of the `file_browser` data into a JSON string and put it in the `user_output` field. In the above example, the user output is a simple message stating why the tasking was issued, but it could be anything (even left blank).
 
