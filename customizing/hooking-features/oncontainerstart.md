@@ -79,3 +79,7 @@ This function is one you can implement as part of the definition for your contai
 ## What does it do?
 
 This function gets an APIToken that is valid for 5 minutes and has the permissions of a spectator. This allows your container to query everything it needs, but not make any modifications.
+
+## When is it called?
+
+This function is called when your container first comes online and syncs with Mythic. It's also called (as of Mythic 3.3.1-rc26) when anybody adds/removes/edits a file inside of your container through the UI. This allows you, the container developer, to be reactive to changes users make to files that might affect things like configurations.
