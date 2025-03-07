@@ -1,12 +1,12 @@
 {
   "$schema": "https://mintlify.com/schema.json",
-  "name": "SpecterOps",
+  "name": "Mythic",
   "logo": {
-    "dark": "/logo/dark.svg",
-    "light": "/logo/light.svg",
-    "href": "https://specterops.io/"
+    "dark": "/logo/mythic.svg",
+    "light": "/logo/mythic.svg",
+    "href": "https://wiki.mythic-c2.net/"
   },
-  "favicon": "/favicon.png",
+  "favicon": "/favicon.ico",
   "colors": {
     "primary": "#2c2677",
     "light": "#5465ff",
@@ -32,13 +32,13 @@
   },
   "topbarLinks": [
     {
-      "name": "Support",
-      "url": "https://support.bloodhoundenterprise.io/hc/en-us?utm_campaign=&utm_medium=&utm_source=&utm_term=&utm_content=&Latest_Campaign="
+      "name": "Get the Code",
+      "url": "https://github.com/its-a-feature/Mythic"
     }
   ],
   "topbarCtaButton": {
-    "name": "Contact Us",
-    "url": "https://specterops.io/contact/?_gl=1*1lu38w6*_up*MQ..*_ga*NTYxMzY4OTkxLjE3MzMzMDkyNTk.*_ga_53SGLN9EBJ*MTczMzMwOTI1Ny4xLjAuMTczMzMwOTI1Ny4wLjAuMA..",
+    "name": "Issues",
+    "url": "https://github.com/its-a-feature/Mythic/issues",
     "arrow": false,
     "style": "roundedRectangle"
   },
@@ -50,26 +50,21 @@
       "version": "version 3.0"
     },
     {
-      "name": "Documentation",
+      "name": "GraphQL API",
       "url": "version-2.3",
       "version": "version 2.3"
     }
   ],
   "anchors": [
     {
-      "name": "Webinars",
-      "icon": "play",
-      "url": "https://specterops.io/events/?_sft_event_type=webinar&_gl=1*1xuv31d*_up*MQ..*_ga*NTYxMzY4OTkxLjE3MzMzMDkyNTk.*_ga_53SGLN9EBJ*MTczMzMwOTI1Ny4xLjAuMTczMzMwOTI1Ny4wLjAuMA.."
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/its-a-feature/Mythic"
     },
     {
-      "name": "Community",
+      "name": "#mythic Community",
       "icon": "slack",
-      "url": "https://join.slack.com/t/bloodhoundhq/shared_invite/zt-1tgq6ojd2-ixpx5nz9Wjtbhc3i8AVAWw"
-    },
-    {
-      "name": "Blog",
-      "icon": "newspaper",
-      "url": "https://specterops.io/blog/?_gl=1*1qw21rw*_up*MQ..*_ga*NTYxMzY4OTkxLjE3MzMzMDkyNTk.*_ga_53SGLN9EBJ*MTczMzMwOTI1Ny4xLjAuMTczMzMwOTI1Ny4wLjAuMA.."
+      "url": "https://ghst.ly/BHSlack"
     }
   ],
   "navigation": [
@@ -857,11 +852,8 @@
     }
   ],
   "footerSocials": {
-    "x": "https://twitter.com/specterops",
-    "github": "https://github.com/SpecterOps/BloodHound",
-    "linkedin": "https://www.linkedin.com/company/specterops",
-    "slack": "https://join.slack.com/t/bloodhoundhq/shared_invite/zt-1tgq6ojd2-ixpx5nz9Wjtbhc3i8AVAWw",
-    "instagram": "https://www.instagram.com/specterops.io/",
-    "youtube": "https://www.youtube.com/channel/UCWMKKqCCQkUjU8dIyiL1yhQ"
+    "x": "https://twitter.com/its_a_feature_",
+    "github": "https://github.com/its-a-feature/Mythic",
+    "slack": "https://ghst.ly/BHSlack",
   }
 }
