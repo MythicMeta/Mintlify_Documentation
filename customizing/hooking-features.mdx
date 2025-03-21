@@ -3,17 +3,17 @@ title: "Overview"
 ---
 
 All of the following features describe information that can be included in responses. These sections describe some additional JSON formats and data that can be used to have your responses be tracked within Mythic or cause the creation of additional elements within Mythic (such as files, credentials, artifacts, etc).
-
+<Info>All of these fields are part of the `responses` array that can be included in both a `get_tasking` and a `post_response` message.</Info>
 You can hook multiple features in a single response because they're all unique. For example, to display something to the user, it should be in the `user_output`field, such as:
 
-```
+```json
 {
     "user_output": "Still working",
 }
 
 or even
 {
-    "user_output": "{\"key": \"nested json for user as string\"}"
+    "user_output": "{\"key\": \"nested json for user as string\"}"
 }
 ```
 
@@ -39,7 +39,7 @@ As you're developing an agent to hook into these features, it's helpful to know 
 
 Throughout this section, the payload type development section, and the c2 message format sections, you'll see a lot of information about message structure. Here is a quick "cheat sheet" reference guide with links to the appropriate sections for more information. The following is an example of a `get_tasking` request to Mythic with almost every possible field added:
 
-```
+```json
 {
     "action": "get_tasking",
     "tasking_size": 1,
@@ -53,7 +53,7 @@ Throughout this section, the payload type development section, and the c2 messag
                 "host": "abc.com",
                 "is_file": false,
                 "permissions": {
-                    "customField": customVal
+                    "customField": "customValue"
                 },
                 "name": "C:\\",
                 "parent_path": "",
@@ -63,14 +63,16 @@ Throughout this section, the payload type development section, and the c2 messag
                 "size": 2300,
                 "update_deleted": false,
                 "files": [
-                    "is_file": false,
-                    "permissions": {
-                        "customField": customVal
-                    },
-                    "name": "Users",
-                    "access_time": 1700164038000,
-                    "modify_time": 1700164038000,
-                    "size": 12345
+                    {
+                        "is_file": false,
+                        "permissions": {
+                            "customField": "custom value"
+                        },
+                        "name": "Users",
+                        "access_time": 1700164038000,
+                        "modify_time": 1700164038000,
+                        "size": 12345
+                    }
                 ]
             },
             "removed_files": [

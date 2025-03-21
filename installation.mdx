@@ -7,7 +7,7 @@ title: "Overview"
 Pull the code from the official GitHub repository:
 
 ```
-$ git clone https://github.com/its-a-feature/Mythic --depth 1
+$ git clone https://github.com/its-a-feature/Mythic --depth 1 --single-branch
 ```
 <Info>
 This is made to work with docker and docker compose plugin, so they both need to be installed. If docker is not installed on your ubuntu machine, you can use the `./install_docker_ubuntu.sh` script to install it for you. If you're running on debian, use the `./install_docker_debian.sh` instead.
@@ -245,6 +245,8 @@ keylog_new (a new keylog entry)
 callback_new (new callback registered)
 ```
 
+Simply modify the code [here](https://github.com/MythicC2Profiles/basic_logger/blob/main/C2_Profiles/basic_logger/my_logger/initialize.go#L16-L39) to change from printing to stdout to whatever it is you want to do, then use `sudo ./mythic-cli build basic_logger` to rebuild with your updated code.
+
 ### Start Mythic
 
 If you came here right from the previous section, your Mythic instance should already be up and running. Check out the next section to confirm that's the case. If at any time you wish to stop Mythic, simply run `sudo ./mythic-cli stop` and if you want to start it again run `sudo ./mythic-cli start`. If Mythic is currently running and you need to make a change, you can run `sudo ./mythic-cli restart` again without any issue, that command will automatically stop things and then restart them.
@@ -312,9 +314,11 @@ Then restart the container with `sudo ./mythic-cli build mythic_nginx` and it sh
 
 ## Mythic Pre-built containers
 
-Starting with Mythic 3.2.16, Mythic pre-builds its main service containers and hosts them on GitHub. You'll see `ghcr.io/itsafeature` in the FROM line in your Dockerfiles instead of the `itsafeaturemythic/` line which is hosted on DockerHub. When Mythic gets a new `tag`, these images are pre-built, mythic-cli is updated, and the associated `push` on GitHub is updated with the new tag version.
+Starting with Mythic 3.2.16, Mythic pre-builds its main service containers and hosts them on GitHub. You might `ghcr.io/itsafeature` in the FROM line in your Dockerfiles instead of the `itsafeaturemythic/` line which is hosted on DockerHub. When the Mythic repo gets a new `tag`, these images are pre-built, mythic-cli is updated, and the associated `push` on GitHub is updated with the new tag version.
 
-When you use the new `mythic-cli` to start Mythic, the `.env` variable `GLOBAL_DOCKER_LATEST` is used to determine which version of the Docker images to use. This variable is written out and saved as part of `mythic-cli` itself, so make sure when you do a `git pull` that you always run `sudo make` to get the latest `mythic-cli` as well.
+When you use the new `mythic-cli` to start Mythic, the `.env` variable `GLOBAL_DOCKER_LATEST` is used to determine which version of the Docker images to use. This variable is written out and saved as part of `mythic-cli` itself.
+
+<Note>so make sure when you do a `git pull` that you always run `sudo make` to get the latest `mythic-cli` as well.</Note>
 
 As part of this, there are two new variables for each container:
 
@@ -324,7 +328,7 @@ As part of this, there are two new variables for each container:
 
 ## Agent Pre-built containers
 
-Mythic is pre-building its containers so that it's faster and easier to get going while still keeping all of the flexibility of Dockerimages. This cuts down on the install/build time of the containers and reduces the general size of the images due to multi-stage Docker builds.
+Mythic is pre-building its containers so that it's faster and easier to get going while still keeping all of the flexibility of Docker images. This cuts down on the install/build time of the containers and reduces the general size of the images due to multi-stage Docker builds.
 
 Agents on GitHub can also do this for free. It's pretty simple (all things considered) and provides a lot of flexibility to how you build your containers. You don't need to configure any special GitHub secrets - you just need to create the necessary yaml file as part of a certain directory of your repository so that things are kicked off on push and on tag. One of these changes is an automatic update to your `config.json` so that Mythic can also track the version associated with your agent.
 

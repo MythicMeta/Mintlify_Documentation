@@ -1,9 +1,7 @@
 ---
 title: "File Uploads (Mythic -> Agent)"
+description: "Upload a file from Mythic to the target"
 ---
-
-
-Upload a file from Mythic to the target
 
 ## What does it mean to upload a file?
 
@@ -12,45 +10,57 @@ This section is specifically for uploading a file from the Mythic server to an a
 In general, there's a few steps that happen for this process (this can be seen visually on the [Message Flow](/message-flow#file-uploads-from-mythic-greater-than-agent) page):
 
 1. The operator issues some sort of tasking that has a parameter type of "File". You'll notice this in the Mythic user interface because you'll always see a popup for you to supply a file from your file system.
-
 2. Once you select a file and hit submit, Mythic loops through all of the files selected and registers them. This process sends each one down to Mythic, saves it off to disk, and assigns it a UUID. These UUIDs are what's stored in place of the raw bytes when you submit your task. So, if you had an upload command that takes a file and a path, your arguments would end up looking like `{"file":"uuid", "path": "/some/path"}` rather than `{"file": raw bytes of file, "path": "/some/path"}`.
-
-3. In the Payload Type's corresponding command python file there is a function called `create_tasking` that handles the processing of tasks from users before handing them off to the database to be fetched by an agent. If your agent supports chunking and transferring files that way, then you don't *need* to do anything else, but if your agent requires that you send down the entire file's contents as part of your parameters, you need to get the associated file.
-
-4. To get the file with Mythic, there's an RPC call we can do:
-
-```
-    async def create_tasking(self, task: MythicTask) -> MythicTask:
-        file_resp = await MythicRPC().execute("get_file",
-                                              file_id=task.args.get_arg("file_id"),
-                                              task_id=task.id,
-                                              get_contents=False)
-        if file_resp.status == MythicRPCStatus.Success:
-            original_file_name = file_resp.response[0]["filename"]
-        else:
-            raise Exception("Error from Mythic: " + str(file_resp.error))
-        task.display_params = f"script {original_file_name}"
-        file_resp = await MythicRPC().execute("update_file",
-                                              file_id=task.args.get_arg("file_id"),
-                                              delete_after_fetch=False,
-                                              comment="Uploaded into memory for jsimport")
-        return task
+3. In the Payload Type's corresponding command python file there is a function called `create_go_tasking` that handles the processing of tasks from users before handing them off to the database to be fetched by an agent. If your agent supports chunking and transferring files that way, then you don't *need* to do anything else, but if your agent requires that you send down the entire file's contents as part of your parameters, you need to get the associated file.
+4. To get the file with Mythic, there's an RPC calls we can do:
+<CodeGroup>
+```python Get File Contents {6-8}
+async def create_go_tasking( self, taskData: PTTaskMessageAllData) -> PTTaskCreateTaskingMessageResponse:
+    response = MythicCommandBase.PTTaskCreateTaskingMessageResponse(
+            TaskID=taskData.Task.ID,
+            Success=True,
+        )
+    file_resp = await SendMythicRPCFileGetContent(MythicRPCFileGetContentMessage(
+                    AgentFileId=taskData.args.get_arg("file"),  # <-- assuming the name of the parameter was called "file"
+                ))
+    if file_resp.Success:
+        file_resp.Content  # <-- this is the raw file content
+    else:
+        raise Exception("Error from Mythic: " + str(file_resp.error))
+    return response
 ```
 
-Lines 2-5 is where we do an RPC call with Mythic to search for files, specifically, we want ones where the file\_id matches the one that was passed down as part of our parameters. This should only return one result, but the result, for consistency, will always come back as an Array. So, `file_resp.response` is an array of file information, we'll take the `filename` from the first entry. We can use this to get the original filename back out from Mythic from the user's upload command. If there's something we want to modify about the file (such as adding a comment automatically or indicating that the file should be deleted from disk after the agent fetches it) we can use the `update_file` RPC function to do so.
+```python Get File Metadata {6-9}
+async def create_go_tasking( self, taskData: PTTaskMessageAllData) -> PTTaskCreateTaskingMessageResponse:
+    response = MythicCommandBase.PTTaskCreateTaskingMessageResponse(
+            TaskID=taskData.Task.ID,
+            Success=True,
+        )
+    file_resp = await SendMythicRPCFileSearch(MythicRPCFileSearchMessage(
+                        TaskID=taskData.Task.ID,
+                        AgentFileID=taskData.args.get_arg("file")
+                    ))
+    if file_resp.Success:
+        if len(file_resp.Files) > 0:
+            response.DisplayParams = f"{file_resp.Files[0].Filename}
+    else:
+        raise Exception("Error from Mythic: " + str(file_resp.error))
+    return response
+```
+</CodeGroup>
+
+The highlighted lines are where we do an RPC call with Mythic to search for files, specifically, we want ones where the file\_id matches the one that was passed down as part of our parameters. This should only return one result, but the result, for consistency, will always come back as an Array. We can use this to get the original filename back out from Mythic from the user's upload command (in the `Get File Metadata` example). If there's something we want to modify about the file (such as adding a comment automatically or indicating that the file should be deleted from disk after the agent fetches it) we can use the `SendMythicRPCFileUpdate` RPC function to do so.
 
 <Info>
-At this point, if you wanted to use the raw bytes of a file instead of the UUID as part of your tasking, your `get_file` query should indicate `get_contents=True`, then you can access the raw bytes via `file_resp.response[0]["contents"]`. You can then swap out the contents of the parameter with `task.args.add_arg("arg name", "base64 of file contents here")`.
+At this point, if you wanted to use the raw bytes of a file instead of the UUID as part of your tasking, you should use the `Get File Contents` example above to fetch the actual contents. Then you can then swap out the contents of the parameter with `taskData.args.add_arg("arg name", "base64 of file contents here")`.
 </Info>
 
 <Info>
-If you want to register a NEW file with Mythic from the payload container that the user didn't first upload, you need to use the `create_file` RPC call.
+If you want to register a NEW file with Mythic from the payload container that the user didn't first upload, you need to use the `SendMythicRPCFileCreate` RPC call.
 </Info>
 
-4\. The agent gets the tasking and sees that there's a file UUID it needs to pull. It sends an initial message to Mythic saying that it will be downloading the file in chunks of a certain size and requests the first chunk. If the agent is going to be writing the file to disk (versus just pulling down the file into memory), then the agent should also send `full_path`. This allows Mythic to track a new entry in the database with an associated task for uploads. The `full_path` key lives at the same level as `user_output`, `total_chunks`, etc in the `post_response` .
-
+4\. The agent gets the tasking and sees that there's a file UUID it needs to pull. It sends an initial message to Mythic saying that it will be downloading the file in chunks of a certain size and requests the first chunk. If the agent is going to be writing the file to disk (versus just pulling down the file into memory), then the agent should also send `full_path`. This allows Mythic to track a new entry in the database with an associated task for uploads.
 5\. The Mythic server gets the request for the file, makes sure the file exists and belongs to this operation, then gets the first chunk of the file as specified by the agent's `chunk_size` and also reports to the agent how many chunks there are.
-
 6\. The Agent can now use this information to request the rest of the chunks of the file.
 
 <Info>
@@ -67,8 +77,7 @@ Files can (optionally) be pulled down multiple times (if you set `delete_after_f
 
 An agent pulling down a file to the target is similar to downloading a file from the target to Mythic. The agent makes the following request to Mythic:
 
-```
-Base64( CallbackUUID + JSON(
+```json
 {
 	"action": "post_response",
 	"responses": [
@@ -83,7 +92,6 @@ Base64( CallbackUUID + JSON(
 	}]
 
 }
-))
 ```
 <Note>
 The `chunk_num` field is 1-based. So, the first chunk you request is `"chunk_num": 1`.
@@ -97,8 +105,7 @@ The `full_path` parameter is only needed if the agent plans to write the file to
 
 The agent gets back a message like:
 
-```
-Base64( CallbackUUID + JSON(
+```json
 {
 	"action": "post_response",
 	"responses": [ {
@@ -112,7 +119,6 @@ Base64( CallbackUUID + JSON(
 		}
 	]
 }
-))
 ```
 
 This process repeats as many as times as is necessary to pull down all of the contents of the file.

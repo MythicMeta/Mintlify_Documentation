@@ -48,9 +48,13 @@ You'll know if they're no longer supported because when the services check in, t
 
 To update these (assuming that the owner/maintainer of that Agent/C2 profile has already done the updates), simply stop the services (`sudo ./mythic-cli stop agentname` or `sudo ./mythic-cli stop profileName`) and run the install command again. The install command should automatically determine that a previous version exists, remove it, and copy in the new components. Then you just need to either start those individual services, or restart mythic overall.
 
+<Note>Assuming the Agent/C2 maintainer is pre-building their images, you can do a short-hand update via `sudo ./mythic-cli update -s [agent name]`. This will fetch the tracked repo (if one exists) and check the `config.json` for the latest version. Specifying `-i` will automatically update if there's an update available. Specifying `sudo ./mythic-cli update -a -i` will go through to check all of your installed services for updates and install them if updates are available. </Note>
+
 Deleting Database
 
 If you want to wipe the database and upgrade, the following steps will help:
+
+<Warning>Deleting the database means you will lose all history of your tasking, operators, callbacks, payloads, events, etc. This is **not** needed for normal updates.</Warning>
 
 1. Reset the database with `sudo ./mythic-cli database reset`
 

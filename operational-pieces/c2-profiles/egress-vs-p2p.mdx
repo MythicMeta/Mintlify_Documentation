@@ -6,11 +6,11 @@ There are two kinds of C2 profiles - egress profiles that talk directly out of t
 
 ## Egress Profiles
 
-The [default HTTP](https://docs.mythic-c2.net/operational-pieces/c2-profiles/http) and the [dynamicHTTP](https://docs.mythic-c2.net/operational-pieces/c2-profiles/dynamichttp) profiles are both examples of egress profiles. They talk directly out of the target network. Egress profiles have associated Docker containers that allow you to do the translation between your special sauce c2 profile and the normal RESTful web requests to the main Mythic server. More information on how this works and how to create your own can be found here: [C2 Related Development](https://docs.mythic-c2.net/customizing/c2-related-development).
+The [http](https://github.com/MythicC2Profiles/http) and the [websocket](https://github.com/MythicC2Profiles/websocket) profiles are both examples of egress profiles. They talk directly out of the target network. Egress profiles have associated Docker containers that allow you to do the translation between your special sauce c2 profile and the normal RESTful web requests to the main Mythic server. More information on how this works and how to create your own can be found here: [C2 Related Development](https://docs.mythic-c2.net/customizing/c2-related-development).
 
 ## P2P Profiles
 
-Peer-to-peer profiles in general are a bit different. They don't talk directly out to the internet; instead, they allow agents to talk to each other.
+Peer-to-peer profiles in general are a bit different. They don't talk directly out to the internet; instead, they allow agents to talk to each other such as via [smb](https://github.com/MythicC2Profiles/smb) and [tcp](https://github.com/MythicC2Profiles/tcp).
 
 This distinction between P2P and Egress for Mythic is made by a simple boolean indicating the purpose of the c2 container.
 

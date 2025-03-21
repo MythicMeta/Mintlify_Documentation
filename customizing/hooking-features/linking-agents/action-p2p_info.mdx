@@ -13,21 +13,25 @@ This message type allows agents to report back new or removed connections betwee
 
 The agent message to Mythic has the following form:
 
-```
+```json
 {
- "user_output": "some ouser output here",
+ "user_output": "some user output here",
  "task_id": "uuid of task here",
  "edges": [
     {
       "source": "uuid of source callback",
       "destination": "uuid of destination callback",
       "metadata": "{ optional metadata json string }",
-      "action": "add" or "remove"
+      "action": "add or remove",
       "c2_profile": "name of the c2 profile used in this connection"
      }
    ]
 }
 ```
+
+<Note>
+    This same `edges` array can be sent outside of a `responses` array. This is handy if your agent suddenly loses connection, not because of a task, but because of other factors and still wants to report back that information to Mythic.
+</Note>
 
 Just like other [post\_response](/customizing/payload-type-development/create_tasking/agent-side-coding/action-post_response) messages, this message has the same UUID and encryption requirements found in [Agent Message Format](/customizing/payload-type-development/create_tasking/agent-side-coding/agent-message-format). Some things to note about the fields:
 
@@ -47,9 +51,9 @@ Just like other [post\_response](/customizing/payload-type-development/create_ta
 
 After getting a message like this, Mythic responds with a message of the following form:
 
-```
+```json
 {
-    "status": "success" or "error",
+    "status": "success or error",
     "error": "error message if status was error",
     "task_id": "id of task"
 }
@@ -61,10 +65,7 @@ This is very similar to most other response messages from the Mythic server.
 
 When an agent sends a message to Mythic with a `delegate` component, Mythic will automatically add a route between the delegate and the agent that sent the message.
 
-For example: If agentA is an egress agent sending messages to a C2 Docker container and it links to agentB, a p2p agent. There are now a few options:
+For example: If agentA is an egress agent and it links to agentB, a p2p agent. When agentA sends a message to Mythic with a delegate message from agentB, Mythic will automatically create a route between the two agents.
 
-* If the p2p protocol involves sending messages back-and-forth between the two agents, then agentA can determine if agentB is a new payload, trying to stage, or a complete callback. When agentB is a complete callback, agentA can announce a new route to agentB.
-
-* When agentA sends a message to Mythic with a delegate message from agentB, Mythic will automatically create a route between the two agents.
-
-This distinction is important due to how the p2p protocol might work. It could be the case that agentB never sends a `get_tasking` request and simply waits for messages to it. In this case, agentA would have to do some sort of p2p comms with agentB to determine who it is so it can announce the route or start the staging process for agentB.
+When connecting via P2P, the linked agent should always send _something_ to Mythic. If it has already gone through the `Checkin` process, then it should resend the checkin message data.
+This just forces Mythic to become aware of the connection between the two callbacks.

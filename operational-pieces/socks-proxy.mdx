@@ -4,10 +4,13 @@ title: "Socks Proxy"
 
 ## What is it?
 
-Socks proxy capabilities are a way to tunnel other traffic through another protocol. Within Mythic, this means tunneling other proxy-aware traffic through your normal C2 traffic. Mythic specifically leverages a modified Socks5 protocol without authentication (it's going through your C2 traffic afterall).
+Socks proxy capabilities are a way to tunnel other traffic through another protocol. Within Mythic, this means tunneling other proxy-aware traffic through your normal C2 traffic. Mythic specifically leverages a modified Socks5 protocol (optionally with username/password for authentication).
 
 <Note>
 The Mythic server runs within a Docker container, and as such, you have to define which ports to expose externally. `Mythic/.env` has a special environment variable you can use to expose a range of ports at a time for this exact reason - `MYTHIC_SERVER_DYNAMIC_PORTS="7000-7010"`. By default this uses ports 7000-7010, but you can change this to any range you want and then simply restart Mythic to make the changes.
+</Note>
+<Note>
+    If you configure `Mythic/.env` to have `MYTHIC_DOCKER_NETWORKING="host"`, then Mythic's core services will use `host` networking instead of `bridge` networking. This means that ports opened are automatically shared with the host. In this case, you can use UDPAssociate SOCKS functionality as well as not having to worry about which ports are exposed by Docker.
 </Note>
 
 ## Where is it?

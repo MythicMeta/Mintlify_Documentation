@@ -12,26 +12,25 @@ This section is specifically for downloading a file from the agent to the Mythic
 In general, there's a few steps that happen for this process (visually this can be found on the [Message Flow](/message-flow#downloading-a-file-from-agent-greater-than-mythic) page):
 
 1. The operator issues a task to download a file, such as `download file.txt`
-
 2. This gets sent down to the agent in tasking, the agent locates the file, and determines it has the ability to read it. Now it needs to send the data back
-
 3. The agent first gets the full path of the file so that it can return that data. That's a quality of life requirement so that operators don't need to supply the full path when specifying files, but so that Mythic can still properly track all files, especially ones that have the same name.
-
-4. The agent then sends an initial message to the Mythic server indicating that it has a file to send. The agent specifies how many chunks it'll take, and which task this is for. If the agent specifies that there are `-1` total chunks, then Mythic will expect at some point for the agent to return a total chunk count so that Mythic knows the transfer is over. This can be helpful when the agent isn't able to seek the file length ahead of time.
-
+4. The agent then sends an initial message to the Mythic server indicating that it has a file to send. The agent specifies how many chunks it'll take, and which task this is for.
+<Note>If the agent specifies that there are `-1` total chunks, then Mythic will expect at some point for the agent to return a total chunk count so that Mythic knows the transfer is over. This can be helpful when the agent isn't able to seek the file length ahead of time.</Note>
 5. The Mythic server then registers that file in the database so it can be tracked. This results in a file UUID. The Mythic server sends back this UUID so that the agent and Mythic can make sure they're talking about the same file for the actual transfer.
-
-6. The agent then starts chunking up the data and sending it chunk by chunk. Each message will have chunk\_size amount of data base64 encoded, the file UUID from step 5, and which chunk number is being sent. Chunk numbers start at 1.
-
+6. The agent then starts chunking up the data and sending it chunk by chunk. The first message should have a chunk\_size field to indicate how much data will be transferred in each chunk. If not, Mythic will assume the chunk size is the amount of data in the first chunk. It's important that this is consistent because it allows Mythic to seek to the right spot in the file to write data. All messages should have chunk_data base64 encoded, the file UUID from step 5, and which chunk number is being sent. Chunk numbers start at 1.
+<Note>As a legacy holdover, chunk numbers start at 1.</Note>
 7. The Mythic server responds back with a successful acknowledgement that it received each chunk
 
 It's not an extremely complex process, but it does require a bit more back-and-forth than a fire-and-forget style. This process allows Mythic to track how many chunks it'll take to download a file and how many have been downloaded so far. The rest of this page will walk through those steps with more concrete code examples.
 
+<Note>
+    If you provide any additional keys in your messages, Mythic will echo them back. Some agents use this as a way to include their own file transfer identifier so that they can make sure to handle all file related events for a file together. This can be helpful if you're sending multiple files at once.
+</Note>
 ## Example (agent response pt. 1):
 
 When an agent is ready to transfer a file from agent to Mythic, it first needs to get the `full_path` of the file and determine how many chunks it'll take to transfer the file. It then creates the following structure:
 
-```
+```json
 {"action": "post_response", "responses": [
     {
         "task_id": "UUID here",
@@ -55,10 +54,10 @@ The `full_path` can be reported in any of the chunks and is an optional value. F
 
 Mythic will respond with a file\_id:
 
-```
+```json
 {"action": "post_response", "responses": [{
         "status": "success",
-        "file_id": "UUID Here"
+        "file_id": "UUID Here",
         "task_id": "task uuid here",
     }
 ]}
@@ -80,8 +79,8 @@ Since then, Mythic was rewritten in Golang with stronger type checking, structs,
 If your agent language is strongly typed or you need to supply all of the fields in every request, then for these additional file transfer messages, make sure the `total_chunks` field is set to `null`, otherwise Mythic will think you're trying to transfer another file.
 </Info>
 
-```
-{"action": "post_response", "responses": [{
+```json
+{"action": "post_response", "responses": [
     {
         "task_id": "task uuid",
         "download": {
@@ -96,8 +95,8 @@ If your agent language is strongly typed or you need to supply all of the fields
 
 For each chunk, Mythic will respond with a success message if all went well:
 
-```
-{"action": "post_response", "responses": [{
+```json
+{"action": "post_response", "responses": [
     {
         "status": "success"
         "task_id": "task uuid here"

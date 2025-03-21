@@ -23,7 +23,9 @@ There are a few different kinds of operator permissions throughout Mythic.
 
 ## Invite Links
 
-You might run into the situation where you need to add people to your server, but don't want to pre-create accounts and passwords for each person (and hope they change their password). Instead, you can generate an invite link for each operator. The creation and use of each one is tracked within Mythic's operational event log in the UI, so you know exactly who created each link and which new user was created as a result.
+You might run into the situation where you need to add people to your server, but don't want to pre-create accounts and passwords for each person (and hope they change their password). Instead, you can generate "Invite Links" that allow users to sign up themselves and create their own passwords and usernames.
+
+Invite links have a few pieces of information you can customize such as: assigning the new operator to a specific operation automatically and limiting the number of times the link can be used. The usage limits can be updated at any time. Every time an invite link is used, it's recorded in the Event Log for everybody to know.
 
 Invite links are disabled by default, but they can be enabled via the .env config (`MYTHIC_SERVER_ALLOW_INVITE_LINKS`) or via the global settings in the UI via an admin. Each link can be used only once and you can track un-used links in the UI as well. This information isn't stored in the database, so these invite links are deleted/unusable after a server restart.
 

@@ -16,7 +16,7 @@ The downside is that creating the image in the first place can be very taxing fo
 
 If you're ever curious about an agent using a remote image, you can check [https://mythicmeta.github.io/overview/](https://mythicmeta.github.io/overview/) and look at the Docker Image column. If there's something there, then the service is going to use the image hosted there by default. If you want to check locally, you'll see three new variables in your `.env` about it. For example, let's say we installed `Poseidon`:
 
-```
+```env
 POSEIDON_USE_BUILD_CONTEXT="true"
 POSEIDON_USE_VOLUME="false"
 POSEIDON_REMOTE_IMAGE="ghcr.io/mythicagents/poseidon:v0.0.0.14"
@@ -32,9 +32,8 @@ Setting this to `true` means that the local `Dockerfile` will be used to generat
 
 ### \*\_USE\_VOLUME
 
-By default, to go with the remote image that's used, a volume will be created to hold any changes that the container makes. This means that when local things change (such as uploading a file into a container), it goes into the volume, not locally on disk where the service is installed.
-
-If you want to see these things locally, then set this to false.
+By default, the local folder in Mythic/InstalledServices is mounted into the container at `/Mythic`. This means that when local things change (such as uploading a file into a container), it goes on disk where the service is installed.
+Alternatively, if this is `true`, then a new Docker Volume is created and mounted inside the container at `/Mythic` instead.
 
 ### Changes to \*\_USE\_BUILD\_CONTEXT or \*\_USE\_VOLUME
 

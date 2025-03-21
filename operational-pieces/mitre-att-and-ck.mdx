@@ -38,4 +38,4 @@ When this command syncs to the Mythic server, those T numbers are stored and use
 
 ## How do I update this to add/remove mappings?
 
-As long as you're keeping with the *old* MITRE ATT\&CK mappings, simply add your T# to the list like shown above, then run `sudo ./mythic-cli start [agent name]`. That'll restart the agent's container and trigger a re-sync of information. If the container is using golang instead of python for its Mythic connectivity, then you need to run `sudo ./mythic-cli build [agent name]` instead.
+Simply add your T# to the list like shown above, then run `sudo ./mythic-cli start [agent name]`. That'll restart the agent's container and trigger a re-sync of information. If the container is using golang instead of python for its Mythic connectivity, then you need to run `sudo ./mythic-cli build [agent name]` instead.

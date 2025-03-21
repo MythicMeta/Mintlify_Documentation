@@ -1,8 +1,7 @@
 ---
 title: "Tokens"
+description: "Token awareness and Token tasking"
 ---
-
-Token awareness and Token tasking
 
 Mythic supports Windows tokens in two ways: tracking which tokens are viewable and tracking which tokens are usable by the callback. The difference here, besides how they show up in the Mythic interface, is what the agent can do with the tokens. The idea is that you can list out all tokens on a computer, but that doesn't mean that the agent has a handle to the token for use with tasking.
 
@@ -10,7 +9,7 @@ Mythic supports Windows tokens in two ways: tracking which tokens are viewable a
 
 As part of the normal responses sent back from the agent, there's an additional key you can supply, `tokens` that is a list of token objects that can be stored in the Mythic database. These will be viewable from the "Search" -> "Tokens" page, but are not leveraged as part of further tasking.
 
-```
+```json
 { "action": "post_response",
     "responses": [
         {
@@ -42,15 +41,15 @@ As part of the normal responses sent back from the agent, there's an additional 
 }
 ```
 
-<Info>
+<Note>
 `token_id` is simply a way for your callback to refer to the various tokens it interacts with. You'll use this `token_id` to register a token with your callback for use in subsequent tasking.
-</Info>
+</Note>
 
 ### Callback Tokens
 
 If you want to be able to leverage tokens as part of your tasking, you need to register those tokens with Mythic and the callback. This can be done as part of the normal `post_response` responses like everything else. The key here is to identify the right token - specifically via the unique combination of token\_id and host.
 
-```
+```json
 {"action": "post_response",
     "responses": [
         {
@@ -75,7 +74,7 @@ Once the token is created and associated with the callback, there will be a new 
 
 Additionally, when getting tasks that have tokens associated with them, the `TokenId` value will be passed down to the agent as an additional field:
 
-```
+```json
 { "action": "get_tasking",
     "tasks": [
         {

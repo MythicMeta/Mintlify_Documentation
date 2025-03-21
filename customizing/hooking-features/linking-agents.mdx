@@ -2,14 +2,12 @@
 title: "Overview"
 ---
 
-##
-
-What does it mean to link agents
+## What does it mean to link agents
 
 This refers to the act of connecting two agents together with a peer-to-peer protocol. The details here are agnostic of the actual implementation of the protocol (could be SSH, TCP, Named Pipes, etc), but the goal is to provide a way to give one agent the context it needs to `link` or establish some peer-to-peer connectivity to a running agent.
 
 <Info>
-This also comes into play when trying to connect to a new executed payload that hasn't gone through the checkin process with Mythic yet to get registered as a Callback.
+This also comes into play when trying to connect to a newly executed payload that hasn't gone through the checkin process with Mythic yet to get registered as a Callback.
 </Info>
 
 ### Getting the Linking information
@@ -29,16 +27,16 @@ This field is auto populated based on two properties:
 
 #### Payload:
 
-Once you've selected a host, the `Payload` dropdown will populate with the associated payloads that Mythic knows are on that host. These payloads are in two main groups:
+Once you've selected a host, the `Payload` dropdown will populate with the associated payloads that Mythic knows are on that host (this will also contain callbacks with p2p c2 profiles). These payloads are in two main groups:
 
 - The payloads that spawned the current callbacks on that host
 - The payloads that were moved over via a command that created a new payload and registered it to the new host
 
-This payload simply acts as a template of information so that you can select the final piece.
+This payload simply acts as a template of information so that you can select the final piece. The payloads listed are also the only ones that have a p2p profile associated with them.
 
 #### What if your host/payload isn't listed?
 
-Select the green `+` next to host, manually specify which host your payload lives on, then select from the dropdown the associated payload that was used. Then click add. Now Mythic is also tracking that the selected payload lives on the indicated host. You can continue with the host/payload/c2\_profile dropdowns like normal.
+Select the green `Register New` button, manually specify which host your payload lives on, then select from the dropdown the associated payload that was used. Then click `Confirm`. Now Mythic is also tracking that the selected payload lives on the indicated host. You can continue with the host/payload/c2\_profile dropdowns like normal.
 
 <Frame>
 <img src="/images/version-3.3/image-1-53.png"/>

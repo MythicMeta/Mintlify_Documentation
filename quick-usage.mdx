@@ -4,7 +4,7 @@ description: "This is a quick primer on using Mythic for the first time"
 ---
 
 
-This section will quickly go from first connection to running a basic agent. This walkthrough assumes you have the `apfell` agent and the `http` c2 profile installed.
+This section will quickly go from first connection to running a basic agent. This walkthrough assumes you have the `apollo` agent and the `http` c2 profile installed.
 
 ### Operations
 
@@ -18,15 +18,19 @@ When you log in with the admin account, you'll automatically have your current o
 
 You need a payload to use. Click the hazard icon at the top and then select "New Payload" on the top right of the new screen. You can also get here by selecting the hamburger icon on the top left and selecting "Create" -> "Create Payload".
 
-You'll be prompted to select which operating system. This is used to filter down possible payloads to generate. Next select the payload type you're wanting to build and fill out any necessary build parameters for the agent. Select any commands you want stamped into the payload initially. This will show commands not yet selected on the left and commands already selected on the right. There are some that can be pre-selected for you based on the agent developer (some are built in and can't be removed, some suggested, etc). If you hover over any of the commands you can see descriptive information about them. You can potentially load commands in later, but for this walkthrough select all of them. Click `Next`.
+You'll be prompted to select which operating system. This is used to filter down possible payloads to generate.
+
+Next select the payload type you're wanting to build and fill out any necessary build parameters for the agent. Click Next.
+
+Select any commands you want stamped into the payload initially (some agents support this type of dynamic loading, some don't). This will show commands not yet selected on the left and commands already selected on the right. There are some that might be pre-selected for you based on the agent developer (some are built in and can't be removed, some suggested, etc). If you hover over any of the commands you can see descriptive information about them. You can potentially load commands in later, but for this walkthrough select all of them. Click `Next`.
 
 <Frame>
     <img src="/images/version-3.3/image-1-5.png"/>
 </Frame>
 
-For c2 profiles, toggle the `HTTP` profile. Change the `Callback host` parameter to be where you want the agent to connect to (if you're using redirectors, you specify that here), similarly specify the `Callback port` for where you want the agent to connect to.
+For c2 profiles, toggle the `HTTP` profile. Change the `Callback host` parameter to be where you want the agent to connect to (if you're using redirectors, you specify that here), similarly specify the `Callback port` for where you want the agent to connect to. Click Next.
 
-The HTTP profile by default listens on port 80. If you want to connect to port 443 with SSL instead, you need to go to the C2 profile management page (click the headphones at the top) and adjust the configuration for the HTTP profile.
+<Note>The HTTP profile by default listens on port 80. If you want to connect to port 443 with SSL instead, you need to go to the C2 profile management page (click the headphones at the top) and adjust the configuration for the HTTP profile.</Note>
 
 Provide a name for the agent (a default one is auto populated) and provide a description that will auto populate the description field for any callbacks created based on this payload. Click `Next`.
 

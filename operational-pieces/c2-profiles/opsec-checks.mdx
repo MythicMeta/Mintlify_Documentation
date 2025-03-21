@@ -11,7 +11,7 @@ C2 Profiles can optionally provide some operational security checks before allow
 
 These checks all happen within a single function per C2 profile with a function called `opsec`:
 
-```
+```python opsec checks
 # The opsec function is called when a payload is created as a check to see if the parameters supplied are good
 # The input for "request" is a dictionary of:
 # {
@@ -37,7 +37,7 @@ From the code snippet above, you can see that this function gets in a request wi
 
 C2 servers know the most about their configuration. You can pass in the configuration for an agent and check it against the server's configuration to make sure everything matches up or get additional insight into how to configure potential redirectors.
 
-```
+```python configuration checks
 async def config_check(self, inputMsg: C2ConfigCheckMessage) -> C2ConfigCheckMessageResponse:
         response = C2ConfigCheckMessageResponse(Success=True)
         response.Message = "Not Implemented"
@@ -49,7 +49,7 @@ async def config_check(self, inputMsg: C2ConfigCheckMessage) -> C2ConfigCheckMes
 
 C2 servers know the most about how their configurations work. You can pass in an agent's configuration and get information about how to generate potential redirector rules so that only your agent's traffic makes it through.
 
-```
+```python redirect rules
 async def redirect_rules(self, inputMsg: C2GetRedirectorRulesMessage) -> C2GetRedirectorRulesMessageResponse:
         response = C2GetRedirectorRulesMessageResponse(Success=True)
         response.Message = "Not Implemented"

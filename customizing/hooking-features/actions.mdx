@@ -5,7 +5,7 @@ title: "Actions"
 
 ## What are actions?
 
-Actions are special messages that don't adhere to the normal message types that you see for the rest of the features in this section. There are only a handful of these messages:
+Actions are what indicate to Mythic what kind of message you're sending. There's `staging_rsa` (for doing EKE staging), `checkin` for going from payload -> callback, `post_response` for exclusively sending output about tasks, and `get_tasking` which allows you to get tasks as well as sending output about tasks.
 
 * [Action: checkin](/customizing/payload-type-development/create_tasking/agent-side-coding/initial-checkin) - Initial checkin messages and key exchanges
 
@@ -13,5 +13,10 @@ Actions are special messages that don't adhere to the normal message types that 
 
 * [Action: post\_response](/customizing/payload-type-development/create_tasking/agent-side-coding/action-post_response) - Sending tasking responses
 
-  * Inside of this is where the features listed throughout this section appear
+<Note>
+    The main difference between `get_tasking` and `post_response` is just that you can get new tasks from `get_tasking`. Otherwise, everything you can send / get as part of a `post_response` message _also_ applies to `get_tasking` messages.
+</Note>
 
+<Info>
+    All of the features listed in this "Hooking Features" section apply to both `get_tasking` and `post_response` messages because they can both include a `responses` array.
+</Info>

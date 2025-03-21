@@ -1,12 +1,11 @@
 ---
 title: "Keylog"
+description: "Keystrokes are sent back from the agent to the Mythic server"
 ---
-
-Keystrokes are sent back from the agent to the Mythic server
 
 ## Example (agent response):
 
-```
+```json
 {
     "task_id": "task uuid here",
     "keylogs": [
@@ -24,9 +23,7 @@ Keystrokes are sent back from the agent to the Mythic server
 Agents can report back keystrokes at any time. There are three components to a keystroke report:
 
 * `user` - the user that is being keylogged
-
 * `window_title` - the title of the window to which the keystrokes belong
-
 * `keystrokes` - the actual recorded keystrokes
 
 Having the information broken out into these separate pieces allows Mythic to do grouping based on the user and window\_title for easier readability.
@@ -37,7 +34,7 @@ If the agent doesn't know the user or the window\_title fields, they should stil
 
 What happens if you need to send keystrokes for multiple users/windows?
 
-```
+```json
 {
     "action": "post_response",
     "responses": [

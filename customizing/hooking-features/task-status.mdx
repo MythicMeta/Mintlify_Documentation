@@ -10,16 +10,11 @@ You probably noticed as you used Mythic that there's a status associated with yo
 
 By default, a task goes through the following stages with the following statuses:
 
-1. `preprocessing` - The task is being sent to the Payload Type container for processing (parsing arguments, confirming values, doing RPC functionality to register files, etc)
-
+1. `preparing task for agent...` - The task is being sent to the Payload Type container for processing (parsing arguments, confirming values, doing RPC functionality to register files, etc)
 2. `submitted` - The task is now ready for an agent to pick it up
-
-3. `processing` - The task has been picked up by an agent, but there hasn't been any response back yet
-
-4. `processed` - The task has at least one response, but the agent hasn't marked it as done yet.
-
+3. `agent processing` - The task has been picked up by an agent, but there hasn't been any response back yet
+4. `processed, agent sending responses...` - The task has at least one response, but the agent hasn't marked it as done yet.
 5. `completed` - The task is marked as completed by the agent and there wasn't an error in execution
-
 6. `error:*` - The agent report back a status of "error"
 
 ### Can I set my own status?

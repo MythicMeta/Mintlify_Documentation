@@ -16,15 +16,15 @@ The top table has a list of current callbacks with a bunch of identifying inform
 
 - Callback - The identifying callback number. The blue or red button will bring the bottom section into focus, load the previously issued tasks for that callback, and populate the bottom section with the appropriate information (discussed in the next section).
 
-- If the `integrity_level` of the callback is `&lt;=` 2, then the callback button will be blue. Otherwise it'll be red (indicating high integrity) and there will be an `*` next to the username. It's up to the agent to report back its own integrity level
+- If the `integrity_level` of the callback is `<=` 2, then the callback button will be blue. Otherwise it'll be red (indicating high integrity) and there will be an `*` next to the username. It's up to the agent to report back its own integrity level
 - Host - The hostname for the machine the callback is from
-- IP - The IP associated with the host
+- IP - The IPs associated with the host (first one in the array shown, but can always be adjusted by clicking this field)
 - User - The current user context of the callback
 - PID - The process ID for the callback
 - OS (arch) - This is the OS and architecture information for the host
 - Initial Checkin - The time when the callback first checked in. This date is stored in UTC in the database, but converted to the operator's local time zone on the page.
-- Last Checkin - How long it's been since the last checkin in day:hour:minute:second time\\
-- Description - The current description of the callback. The default value for this is specified by the `default description` section when creating a payload. This can be changed either via the callback's dropdown.
+- Last Checkin - How long it's been since the last checkin in
+- Description - The current description of the callback. The default value for this is specified by the `description` section when creating a payload. This can be changed via the callback's dropdown.
 
 Next to the `Interact` button is a dropdown button that provides more accessible information:
 
@@ -32,8 +32,8 @@ Next to the `Interact` button is a dropdown button that provides more accessible
     <img src="/images/version-3.3/image-1-12.png"/>
 </Frame>
 
-- Expand Callback - This opens up the callback in a separate window where you can either just view that whole callback full screen, or selectively add other callbacks to view in a split view
-- Edit Description - This allows you to edit the description of a callback. This will change the side description at the end and also rename the tab at the bottom when somebody clicks `interact`. To set this back to the default value, interact with the callback and type `set description reset`. or set this to an empty string
+- Expand Callback - This opens up the callback in a separate window where you can either just view that whole callback full screen
+- Edit Description - This allows you to edit the description of a callback (as well as the color of the row in the table). To set this back to the default value set this to an empty string
 - Hide Callback - This removes the callback from the current view and sets it to inactive. Additionally, from the Search page, you can make the callback `Active` again which will bring it back into view here.
 - Hide Multiple - allows you to hide multiple callbacks at once instead of doing one at a time.
 - Process Browser - This allows you to view a unified process listing from all agents related to this `host`, but issue new process listing requests from within this callback's context
@@ -53,7 +53,7 @@ When you start typing a command, you can press `Tab` to finish out and cycle thr
 
 Submitting a command goes through a few phases that are also color coded to help visually see the state of your task:
 
-1. Preprocessing - This is when the command is submitted to Mythic, but execution is passed to the associated Payload Type's command file for processing. These capabilities are covered in more depth in the Payload Types section.
+1. Creating Task - This is when the command is submitted to Mythic, but execution is passed to the associated Payload Type's command file for processing. These capabilities are covered in more depth in the Payload Types section.
 2. Submitted- The task has finished pre-processing and is ready for the agent to request it.
 3. Processing - The agent has pulled down the task, but has not returned anything.
 4. Processed - The agent has returned *at least one* response for the task, but hasn't explicitly marked the task as completed
