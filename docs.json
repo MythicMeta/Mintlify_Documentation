@@ -155,14 +155,14 @@
               {
                 "group": "Overview",
                 "pages": [
-                  "api/home",
-                  "api/hasura"
+                  "power_users/home",
+                  "power_users/hasura"
                 ]
               },
               {
                 "group": "Scripting",
                 "pages": [
-                  "api/scripting"
+                  "power_users/scripting"
                 ]
               }
             ]
