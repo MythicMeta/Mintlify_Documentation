@@ -8,14 +8,16 @@ The main page to see and interactive with active callbacks can be found from the
 
 ### Top table
 
-The top table has a list of current callbacks with a bunch of identifying information. All of the table headers can be clicked to sort the information in ascending or descending order.
+The top table has a list of current callbacks with a bunch of identifying information.
+Many of the table headers can be clicked to sort the information in ascending or descending order or double clicked to auto-adjust the width based on the longest element in the column.
+
+All rows have a context menu by right clicking anywhere in the callback row.
 
 <Frame>
     <img src="/images/version-3.3/image-1-11.png"/>
 </Frame>
 
 - Callback - The identifying callback number. The blue or red button will bring the bottom section into focus, load the previously issued tasks for that callback, and populate the bottom section with the appropriate information (discussed in the next section).
-
 - If the `integrity_level` of the callback is `<=` 2, then the callback button will be blue. Otherwise it'll be red (indicating high integrity) and there will be an `*` next to the username. It's up to the agent to report back its own integrity level
 - Host - The hostname for the machine the callback is from
 - IP - The IPs associated with the host (first one in the array shown, but can always be adjusted by clicking this field)
@@ -26,20 +28,20 @@ The top table has a list of current callbacks with a bunch of identifying inform
 - Last Checkin - How long it's been since the last checkin in
 - Description - The current description of the callback. The default value for this is specified by the `description` section when creating a payload. This can be changed via the callback's dropdown.
 
-Next to the `Interact` button is a dropdown button that provides more accessible information:
+Next to the `Interact` button is a dropdown button that provides more accessible information (also accessible via right-click):
 
 <Frame>
     <img src="/images/version-3.3/image-1-12.png"/>
 </Frame>
-
-- Expand Callback - This opens up the callback in a separate window where you can either just view that whole callback full screen
-- Edit Description - This allows you to edit the description of a callback (as well as the color of the row in the table). To set this back to the default value set this to an empty string
+- Interact - Open up the default tasking area (this view can be changed from the default and other view options exist in the "Tasking Views" sub-menu)
+- Edit Description and Color - This allows you to edit the description of a callback (as well as the color of the row in the table). To set this back to the default value set this to an empty string
 - Hide Callback - This removes the callback from the current view and sets it to inactive. Additionally, from the Search page, you can make the callback `Active` again which will bring it back into view here.
-- Hide Multiple - allows you to hide multiple callbacks at once instead of doing one at a time.
-- Process Browser - This allows you to view a unified process listing from all agents related to this `host`, but issue new process listing requests from within this callback's context
-- Locked - If a callback is locked by a specific user, this will be indicated here (along with a changed user and lock icon instead of a keyboard on the interacting button).
-- File Browser - this allows you to view a process browser across all of the agents.
-- Task Multiple - this allows you to task multiple callbacks of the same Payload Type at once.
+- Exit Callback - This will automatically (after confirmation) issue the associated `exit` command to the callback.
+- Lock Callback - If a callback is locked by a specific user, this will be indicated here (along with a changed user and lock icon instead of a keyboard on the interacting button).
+- Browsers - Opens the optional File/Process browsers from this callback's context
+- Bulk Actions - Bulk task or hide callbacks
+- Tasking Views - open up tasking from different perspectives - the normal accordion view, a split view with more room for task output, and a console-like view
+- Metadata - view metadata about the callback, associated payload, and export if necessary
 
 ## Bottom Area
 
@@ -48,6 +50,8 @@ The bottom area is where you'll find the tasks, process listings, file browsers,
 ### Auto Complete
 
 When you start typing a command, you can press `Tab` to finish out and cycle through the matching commands. If you don't type anything and hit `Tab` then you'll cycle through all available commands. You can use the up and down arrow keys to cycle through the tasking history for that callback, and you can use `ctrl+r` to do a reverse grep search through your previous history as well.
+
+Auto complete isn't just for the command names, but also applies to the command parameters and even for choices within a specific parameter. When in doubt, tab!
 
 ### Tasking
 

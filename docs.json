@@ -201,7 +201,8 @@
                       "customizing/hooking-features/rpfwd",
                       "customizing/hooking-features/interactive-tasking",
                       "customizing/hooking-features/task-status",
-                      "customizing/hooking-features/oncontainerstart"
+                      "customizing/hooking-features/oncontainerstart",
+                      "customizing/hooking-features/context-tracking"
                     ]
                   },
                   {

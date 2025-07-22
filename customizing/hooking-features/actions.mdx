@@ -9,9 +9,9 @@ Actions are what indicate to Mythic what kind of message you're sending. There's
 
 * [Action: checkin](/customizing/payload-type-development/create_tasking/agent-side-coding/initial-checkin) - Initial checkin messages and key exchanges
 
-* [Action: get\_tasking](/customizing/payload-type-development/create_tasking/agent-side-coding/action_get_tasking) - Getting tasking
+* [Action: get\_tasking](/customizing/payload-type-development/create_tasking/agent-side-coding/action_get_tasking) - Sending response data for tasks, socks, rpfwd, delegates, but ALSO getting new tasks.
 
-* [Action: post\_response](/customizing/payload-type-development/create_tasking/agent-side-coding/action-post_response) - Sending tasking responses
+* [Action: post\_response](/customizing/payload-type-development/create_tasking/agent-side-coding/action-post_response) - Sending response data for tasks, socks, rpfwd, delegates, but NOT getting new tasks.
 
 <Note>
     The main difference between `get_tasking` and `post_response` is just that you can get new tasks from `get_tasking`. Otherwise, everything you can send / get as part of a `post_response` message _also_ applies to `get_tasking` messages.
