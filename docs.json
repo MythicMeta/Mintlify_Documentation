@@ -243,7 +243,6 @@
                           }
                         ]
                       },
-                      "customizing/payload-type-development/mythicrpc",
                       "customizing/payload-type-development/browser-scripting",
                       "customizing/payload-type-development/dynamic-parameter-values",
                       "customizing/payload-type-development/sub-tasking-task-callbacks",
@@ -297,6 +296,16 @@
                   },
                   "customizing/4.-extending-agent-commands",
                   "customizing/mythic-ui-development"
+                ]
+              }
+            ]
+          },
+          {"tab":  "MythicRPC",
+            "groups": [
+              {
+                "group": "Overview",
+                "pages": [
+                  "mythicrpc/mythicrpc"
                 ]
               }
             ]
@@ -472,7 +481,6 @@
                           }
                         ]
                       },
-                      "version-3.0/customizing/payload-type-development/mythicrpc",
                       "version-3.0/customizing/payload-type-development/browser-scripting",
                       "version-3.0/customizing/payload-type-development/dynamic-parameter-values",
                       "version-3.0/customizing/payload-type-development/sub-tasking-task-callbacks",
@@ -687,7 +695,6 @@
                       "version-2.3/customizing/payload-type-development/browser-scripting",
                       "version-2.3/customizing/payload-type-development/dynamic-parameter-values",
                       "version-2.3/customizing/payload-type-development/create_tasking",
-                      "version-2.3/customizing/payload-type-development/mythicrpc",
                       "version-2.3/customizing/payload-type-development/opsec-checking",
                       "version-2.3/customizing/payload-type-development/sub-tasking-task-callbacks",
                       "version-2.3/customizing/payload-type-development/process-response",
