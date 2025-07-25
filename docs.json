@@ -804,8 +804,8 @@
     }
   },
   "logo": {
-    "light": "/logo/mythic.svg",
-    "dark": "/logo/mythic.svg",
+    "light": "/logo/mythic.png",
+    "dark": "/logo/mythic.png",
     "href": "https://wiki.mythic-c2.net/"
   },
   "appearance": {
