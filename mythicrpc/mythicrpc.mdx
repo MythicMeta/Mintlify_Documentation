@@ -196,7 +196,9 @@ The `Filename` is self explanatory, along with `IsScreenshot` and `IsDownloadFro
 
 #### SendMythicRPCFileGetContent
 
-This function allows you to fetch the content of a specific file that's specified by the `AgentFileID` (UUID string).
+This function allows you to get the actual file contents for a specified file. The `SendMythicRPCFileGetContentMessage` takes in one parameter, `AgentFileID` (string) which is the UUID of the file.
+If you upload a file as part of tasking, say for a parameter called `assembly`, then in your `create_go_tasking`, the `assembly` value will be this UUID which you can pass right into the `AgentFileID` field.
+
 
 #### SendMythicRPCFileSearch
 
@@ -206,3 +208,85 @@ You can also limit how many you want and if you want to include Payloads, Downlo
 
 #### SendMythicRPCFileUpdate
 
+This function allows you to update information about the file specified by `AgentFileID` (string). This `AgentFileID` is the UUID value of the string.
+You can adjust the comment on the file, change the filename, append or replace the file contents, and even mark it for deletion.
+If you set `DeleteAfterFetch` to `true`, then once any agent fetches this file from the Mythic server, Mythic will then delete the file off disk and mark it as deleted. This can be helpful for temporary stubs you generate that you want to be removed after the agent successfully fetches it.
+
+#### SendMythicRPCFileBrowserCreate
+
+This function allows you to register "files" within the File Browser. There's no actual file content with these, instead it's more metadata specific. The `TaskID` parameter is required because it allows Mythic to scope this data to the right operation and associate it with coming from a specific task.
+The content of the `FileBrowser` class is the same as when an agent is trying to hook into this same functionality (from the agent side)[customizing/hooking-features/file-browser].
+
+#### SendMythicRPCFileBrowserParsePath
+
+This function allows you to pass in a `Path` (string) and have Mythic attempt to parse it into its specific sections. The resulting `AnalyzedPath` specifies the host (if one was specified as part of a UNC Path), the path separator used (`/` or `\`), and an array of all the pieces of the path.
+This function attempts to allow a more consistent approach for agents wanting to handle a variety of pathing options without needing to write parsing logic on their own.
+
+#### SendMythicRPCFileBrowserRemove
+
+This function allows you to mark files in the file browser as deleted. They'll hide from view unless you specifically click a button in the UI to see deleted files as well (they'll have a strikethrough).
+The `TaskID` field is required and allows Mythic to appropriately scope the queries to the right operation. The `RemovedFiles` array of objects identify the absolute path to the file/folder that's removed and (optionally) the Host if it's different than the host where the task/callback is running.
+
+#### SendMythicRPCHandleAgentJSON
+
+This function allows you to send a normal full agent JSON message to Mythic for processing. You need to specify either the `CallbackID` (int) or `AgentCallbackID` (uuid string) of the callback where this message is coming from.
+You also need to supply the name of the C2 profile where the message is coming from.
+
+#### SendMythicRPCKeylogCreate
+
+This function allows you to register keystrokes within Mythic's database. The `TaskID` is required as it allows Mythic to scope the keylogs to the appropriate operation and task.
+The `Keylogs` array allows you to specify the User, Host, and Window title where the keystrokes are coming from, but only the actual keystrokes themselves are required.
+
+#### SendMythicRPCKeylogSearch
+
+This function allows you to search for keylogs by either specific keystrokes, window titles, or users.
+The `TaskID` parameter is required as it allows Mythic to scope the query to the appropriate operation.
+
+#### SendMythicRPCOperationEventLogCreate
+
+This function allows you to send a message to the event log. You need to provide either `TaskId`, `CallbackId`, `CallbackAgentId`, or `OperationId` to appropriately scope the message to the right operation.
+After that, the `message` is what you actually want to send and the `MessageLevel` indicates if you want it to be a `warning`, `debug`, or `info` message.
+
+#### SendMythicRPCPayloadAddCommand
+
+This function allows you to add a command to an already created payload so that when that payload is executed and turned into a callback, Mythic will track the command as available for use.
+You must supply the `PayloadUUID` value so Mythic knows exactly which payload and then the `Commands` array is where you specify the names of the commands you want to add.
+This can be particularly helpful during payload building if you decide that you need to add more commands to the payload than what the user selected (ex: the user selected a command that has a dependency but didn't select the dependency).
+
+#### SendMythicRPCPayloadCreateFromScratch
+
+This function allows you to create an entirely new payload from scratch by specify all the components - build parameters, os, c2 profiles and their parameters, commands, filename, description, etc. You must supply the `TaskID` because this allows Mythic to scope the build to the appropriate operation.
+
+#### SendMythicRPCPayloadCreateFromUUID
+
+This function allows you to create a payload based on an existing payload (specified by UUID), but allows you to modify the new payload's description, filename, and optionally if you want to register that it's going to be placed on a remote host. This remote host piece can be really helpful if you're doing this as part of a lateral movement technique so that the new payload will already be associated with the remote host in a `link` dropdown modal.
+The `PayloadUUID` and `TaskID` values are required so that Mythic can properly track not just that the new Payload is in the right operation, but specifically where / why the new payload is getting created.
+
+#### SendMythicRPCPayloadGetContent
+
+This function allows you to get the content of a payload based on its UUID. The `PayloadUUID` field is required.
+
+#### SendMythicRPCPayloadRemoveCommand
+
+This function allows you to remove commands from a payload that's tracked with Mythic. While this doesn't actually modify the payload file itself, it does inform Mythic that when the payload executes and becomes a callback, that the specified commands are no longer available for tasking.
+`PayloadUUID` and `Commands` are both required fields.
+
+#### SendMythicRPCPayloadSearch
+
+This function allows you to search for payloads. If you just provide the `PayloadUUID` value, then Mythic will get that specific payload's configuration. Otherwise, you need to provide the `CallbackID` (int) so that Mythic can scope the search to the appropriate operation.
+The other fields, `Description`, `Filename`, `PayloadTypes` array, and `BuildParameters` allow you to narrow your search to just specific payloads from specific payload types, ones with specific build parameter values, or with specific filename/descriptions.
+
+#### SendMythicRPCPayloadUpdateBuildStep
+
+This function allows you to update the status of build steps during the build process for your payload. You must supply the `PayloadUUID` so Mythic knows which payload and the `StepName` so Mythic knows which step this is referring to. Then you can specify if there's any `StepStdout` or `StepStderr` to capture. You then need to specify if the step was success/error (`StepSuccess`) or if the step was skipped `StepSkip`.
+
+#### SendMythicRPCPayloadOnHostCreate
+
+This function allows you to register a specific payload on a specific host. This is helpful for linking payloads if you know that a payload is already going to exist on a specific host.
+`TaskID` is required because it allows Mythic to scope to the right operation and to track which task caused the payload to end up on a specific host.
+This can be helpful as part of a `process_response` function call when doing lateral movement so that you can automatically update Mythic that your payload is on a remote host after you do something like upload it via SMB.
+
+#### SendMythicRPCProcessCreate
+
+This function allows you to create new processes for the Process Browser in the Mythic UI. The `TaskID` value is required as it allows Mythic to scope the data to the appropriate operation.
+The array of Process data is the same as what the (agent would supply)[customizing/hooking-features/process_list] when doing the same thing.
