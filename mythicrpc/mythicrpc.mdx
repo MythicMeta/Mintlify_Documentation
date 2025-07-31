@@ -215,7 +215,7 @@ If you set `DeleteAfterFetch` to `true`, then once any agent fetches this file f
 #### SendMythicRPCFileBrowserCreate
 
 This function allows you to register "files" within the File Browser. There's no actual file content with these, instead it's more metadata specific. The `TaskID` parameter is required because it allows Mythic to scope this data to the right operation and associate it with coming from a specific task.
-The content of the `FileBrowser` class is the same as when an agent is trying to hook into this same functionality (from the agent side)[customizing/hooking-features/file-browser].
+The content of the `FileBrowser` class is the same as when an agent is trying to hook into this same functionality [from the agent side](customizing/hooking-features/file-browser).
 
 #### SendMythicRPCFileBrowserParsePath
 
@@ -289,4 +289,48 @@ This can be helpful as part of a `process_response` function call when doing lat
 #### SendMythicRPCProcessCreate
 
 This function allows you to create new processes for the Process Browser in the Mythic UI. The `TaskID` value is required as it allows Mythic to scope the data to the appropriate operation.
-The array of Process data is the same as what the (agent would supply)[customizing/hooking-features/process_list] when doing the same thing.
+The array of Process data is the same as what the [agent would supply](customizing/hooking-features/process_list) when doing the same thing.
+
+#### SendMythicRPCProcessSearch
+
+This function allows you to search for processes across a wide variety of attributes. The `TaskID` value is required because it allows Mythic to scope the search to the right operation.
+
+#### SendMythicRPCProxyStart
+
+This function indicates to Mythic that it needs to track a new proxy connection. `TaskID` is a required value as it allows Mythic to appropriately scope to the right operation and callback.
+The `LocalPort` for a `PortType` of `socks` means the port that the Mythic server will open up. The `LocalPort` for a `PortType` of `rpfwd` is the port that the _agent_ is going to open up.
+`RemoteIP` and `RemotePort` are both for `rpfwd` connections. You can optionally add authentication to your `socks` ports by supplying a `Username` and `Password` value.
+For `socks`, if you don't provide a local port and leave it at `0`, then Mythic will select a port for you and let you know which one it is in the response.
+
+#### SendMythicRPCProxyStop
+
+This function indicates to Mythic that it needs to stop a proxied capability; if this is a `socks` connection, it'll close the associated port. The `Port` here is the port that Mythic opened or the port that the agent opened.
+If you started a port with a `Username` and `Password`, then you need to supply those again to close it.
+
+#### SendMythicRPCResponseCreate
+
+This function allows you to send output a task's output in the Mythic UI. This requires the `TaskID` so Mythic knows which task to associate the new output with and then the raw bytes of the output.
+Mythic saves this as raw bytes to help reduce issues between encodings and potential null characters from assembly/bof outputs.
+
+#### SendMythicRPCResponseSearch
+
+This function allows you to search for content in responses from a specific task. Both `TaskID` and `Response` are required.
+
+#### SendMythicRPCTagCreate
+
+This function allows you to tag tasks, files, credentials, or mtyhictree (FileBrowser / ProcessBrowser) objects with tags.
+`TagTypeID` is a required field so that Mythic knows which tag this is an instance of. You also need to supply one of `TaskID`, `FileID`, `CredentialID`, or `MythicTreeID` so that Mythic can associate the tag with the appropriate object.
+
+#### SendMythicRPCTagSearch
+
+This function allows you to search through existing tags. The `TaskID` field is required as it allows Mythic to scope the query to the right operation. All of the `Search*` fields allow you to scope your search.
+
+#### SendMythicRPCTagTypeGetOrCreate
+
+This function allows you to create tag types in an idempotent manner - if the tagtype already exists, the existing object will be returned or a new one will get created.
+The `TaskID` field is required because it allows Mythic to scope this mutation to the right operation. Outside of that, you must supply either the TagTypeID to fetch the data associated with a specific tagtype or you must supply the name, color, and description to create your tagtype.
+
+#### SendMythicRPCTaskCreate
+
+This function allows you to create a new task for a specific callback. This isn't a subtask of an existing task, but a new task.
+

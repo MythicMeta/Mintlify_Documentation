@@ -803,6 +803,9 @@
       ]
     }
   },
+  "thumbnails": {
+    "appearance": "dark"
+  },
   "logo": {
     "light": "/logo/mythic.png",
     "dark": "/logo/mythic.png",
