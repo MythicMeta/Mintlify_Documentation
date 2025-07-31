@@ -804,7 +804,8 @@
     }
   },
   "thumbnails": {
-    "background": "logo/mythic.svg"
+    "appearance": "light",
+    "background": "logo/mythic.png"
   },
   "logo": {
     "light": "logo/mythic.png",
