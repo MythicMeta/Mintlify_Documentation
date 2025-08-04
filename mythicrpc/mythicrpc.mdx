@@ -332,5 +332,53 @@ The `TaskID` field is required because it allows Mythic to scope this mutation t
 
 #### SendMythicRPCTaskCreate
 
-This function allows you to create a new task for a specific callback. This isn't a subtask of an existing task, but a new task.
+This function allows you to create a new task for a specific callback. This isn't a subtask of an existing task, but a new task. There are a few things you must provide:
 
+* `AgentCallbackID` - this is the UUID string of the callback you want to task
+* `CommandName` - this is the name of the command you want to issue
+* `Params` - these are the string version of the parameters you want to provide. In the vast majority of the time, you should be using a dictionary to call out all of the parameters and then turn that dictionary into a json string for this.
+
+You can optionally provide `PayloadTypeName` if the command you're wanting to issue isn't part of the payload type for the callback. That might sound confusing, but a good example would be the `forge` CommandAugmentation container. You might want to issue a `forge` command to an `apollo` callback.
+You can optionally provide a `Token` (int) identifier as well if you want to indicate to your agent to use a specific token for the task.
+
+#### SendMythicRPCTaskCreateSubtask
+
+This function allows you to create a subtask of the current task. By doing things this way as compared to the above function, you can provide a `SubtaskCallbackFunction` name and get execution again when the subtask finishes.
+You must provide the `TaskID` value so that Mythic can associate this subtask with the appropriate task.
+Similarly to the above command, you can optionally provide the `PayloadTypeName` if the `CommandName` you're trying to issue isn't associated with the callback payload type, but another one.
+`Params` can be an empty string, but if you're providing parameters then ideally you provide a JSON string representation of the parameters by name.
+`SubtaskCallbackFunction` allows you to provide the name of a function for execution upon the subtask finishing (successfully or with error).
+
+#### SendMythicRPCTaskCreateSubtaskGroup
+
+This function allows you to create multiple subtasks of the current task all at once and register a single function to get execution when all of them finish.
+This is very similar to the `SendMythicRPCTaskCreateSubtask` function, except it's for a group rather than a single task.
+`TaskID` is a required field so that Mythic knows which task these new tasks will be under.
+`GroupName` is also required so that Mythic can group all of these tasks together.
+The `Tasks` list is the list of tasks to create which all require a `CommandName` at least.
+
+#### SendMythicRPCTaskDisplayToRealIDSearch
+
+This function allows you to take an operation (name or id) and a task's display ID and convert it into the Task's real ID (TaskID).
+In the vast majority of instances you shouldn't need to use this function, but it can be a helpful way to convert if you only happen to have a display ID for a task and an Operation Name/ID, but need the task's real ID.
+
+#### SendMythicRPCTaskSearch
+
+This function allows you to search for tasks that have already executed. You must provide `TaskID` so that your search can be scoped to the right operation.
+All of the `Search*` parameters allow you to narrow down your search.
+
+
+#### SendMythicRPCTaskUpdate
+
+This function allows you to update various attributes about a task. The `TaskID` field is required so that Mythic knows which task to update.
+All of the `Update*` fields allow you to control which things you want to update. It's very common to update the `UpdateStatus` field with custom status options and to do the `UpdateCompleted` to mark the task as finished.
+
+#### SendMythicRPCAPITokenCreate
+
+This function allows you to create a "token" within Mythic's token tracking. This is a precursor to adding a token to a callback.
+The `TaskID` field is required as it allows Mythic to scope this to the right operation. The list of `Tokens` is also required, but for each `Token`, you only have to provide the `TokenID` (this is an agent-created ID that allows Mythic and the agent to reference the same token).
+
+#### SendMythicRPCTokenRemove
+
+This function allows you to remove tokens from Mythic's token tracking. Similar to the create function, you must provide the `TaskID` field so that Mythic can scope this to the right operation.
+In the Tokens list, the only required field is the `TokenID` so that Mythic can look up the right tokens to mark them as deleted.
