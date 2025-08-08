@@ -56,6 +56,7 @@ This function is called when your container first comes online and syncs with My
               "stdout": self.EventLogInfoMessage,
               "stderr": self.EventLogErrorMessage
           }
+  # define this function inside of any Payload Type, C2 Profile, Eventing, etc etc class
   async def on_container_start(self, message: ContainerOnStartMessage) -> ContainerOnStartMessageResponse:
           return ContainerOnStartMessageResponse(ContainerName=self.name)
   ```

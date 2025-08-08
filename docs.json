@@ -7,6 +7,11 @@
     "light": "#50B071",
     "dark": "#6D70A7"
   },
+  "integrations": {
+    "plausible": {
+      "domain": "wiki.mythic-c2.net"
+    }
+  },
   "favicon": "/favicon.png",
   "navigation": {
     "versions": [
@@ -155,14 +160,14 @@
               {
                 "group": "Overview",
                 "pages": [
-                  "power_users/home",
-                  "power_users/hasura"
+                  "scripting/home",
+                  "scripting/hasura"
                 ]
               },
               {
                 "group": "Scripting",
                 "pages": [
-                  "power_users/scripting"
+                  "scripting/scripting"
                 ]
               }
             ]
