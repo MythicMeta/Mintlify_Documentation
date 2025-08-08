@@ -810,7 +810,7 @@
   },
   "thumbnails": {
     "appearance": "dark",
-    "background": "logo/mythic.png"
+    "background": "logo/thumbnail.png"
   },
   "logo": {
     "light": "logo/mythic.png",
