@@ -12,7 +12,7 @@ When sending delegate messages, there's a simple standard format:
 
 #### Agent -> Mythic Message
 
-```
+```json
 {
     "action": "some action here",
     "delegates": [
@@ -35,7 +35,7 @@ Within a delegates array are a series of JSON dictionaries:
 
 #### Mythic -> Agent Reply
 
-```
+```json
 {
     "action": "some action here",
     "delegates": [
@@ -50,7 +50,7 @@ Within a delegates array are a series of JSON dictionaries:
 
 The `new_uuid` field indicates that the `uuid` field the agent sent doesn't match up with the UUID in the associated message. If the agent uses the right UUID with the agentMessage then the response would be:
 
-```
+```json
 {
     "action": "some action here",
     "delegates": [
@@ -96,9 +96,9 @@ Now that there's a "route" between the two agents that Mythic is aware of, a few
 
 What happens when agentA and agentB can no longer communicate though? agentA needs to send a message back to Mythic to indicate that the connection is lost. This can be done with the [edges](/customizing/hooking-features/linking-agents/action-p2p_info) key. Using all of the information agentA has about the connection, it can announce that Mythic should remove a edge between the two callbacks. This can either happen as part of a response to a tasking (such as an explicit task to unlink two agents) or just something that gets noticed (like a computer rebooted and now the connection is lost). In the first case, we see the example below as part of a normal post\_response message:
 
-```
+```json
 {
- "user_output": "some ouser output here",
+ "user_output": "some user output here",
  "task_id": "uuid of task here",
  "edges": [
     {
@@ -113,7 +113,7 @@ What happens when agentA and agentB can no longer communicate though? agentA nee
 
 If this wasn't part of some task, then there would be no task\_id to use. In this case, we can add the same `edges` structure at a higher point in the message:
 
-```
+```json
 {
  "action": "get_tasking" (could be "post_response", "upload", etc)
  "edges": [

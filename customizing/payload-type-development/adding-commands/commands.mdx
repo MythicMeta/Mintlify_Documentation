@@ -20,7 +20,7 @@ If you're curious how this all plays out in a diagram, you can find one here: [#
 
 ## CommandBase
 
-```
+```python
 from mythic_payloadtype_container.PayloadBuilder import *
 from mythic_payloadtype_container.MythicCommandBase import *
 
@@ -106,7 +106,7 @@ When issuing tasks via Mythic's Scripting, they'll always come through as a task
 
 With this ability to track where tasking is coming from and what form it's in, an agent's command file can choose to parse this data differently. By default, all commands must supply a `parse_arguments` function in their associated `TaskArguments` subclass. If you do nothing else, then *all* of these various forms will get passed to that function as strings (if it's a dictionary it'll get converted into a JSON string). However, you can provide another function, `parse_dictionary` that can handle specifically the cases of parsing a given dictionary into the right CommandParameter objects as shown below:
 
-```
+```python
 async def parse_arguments(self):
     if len(self.command_line) == 0:
         raise ValueError("Must supply arguments")
@@ -130,7 +130,7 @@ In `self.args` we define an array of our arguments and what they should be along
 
 In `parse_arguments` we parse the user supplied `self.command_line` into the appropriate arguments. The hard part comes when you allow the user to type arguments free-form and then must parse them out into the appropriate pieces.
 
-```
+```python
 class LsArguments(TaskArguments):
     def __init__(self, command_line, **kwargs):
         super().__init__(command_line, **kwargs)
@@ -178,7 +178,7 @@ While the TaskArgument's `parse_arguments` method simply parses the user supplie
 
 CommandParameters, similar to BuildParameters, provide information for the user via the UI and validates that the values are all supplied and appropriate.
 
-```
+```python
 class CommandParameter:
     def __init__(
         self,
@@ -272,7 +272,7 @@ class CommandParameter:
 
 - If your command needs you to pick from the set of commands (rather than a static set of values), then there are a few other components that come into play. If you want the user to be able to select any command for this payload type, then set `choices_are_all_commands` to `True`. Alternatively, you could specify that you only want the user to choose from commands that are already loaded into the callback, then you'd set `choices_are_loaded_commands` to `True`. As a modifier to either of these, you can set `choice_filter_by_command_attributes` to filter down the options presented to the user even more based on the parameters of the Command's `attributes` parameter. This would allow you to limit the user's list down to commands that are loaded into the current callback that support MacOS for example. An example of this would be:
 
-```
+```python
 CommandParameter(name="test name",
                  type=ParameterType.ChooseMultiple,
                  description="so many choices!",
@@ -307,7 +307,7 @@ Let's look at an example - the new `apfell` agent's `upload` command now leverag
 
 Notice how both options require the `remote_path` parameter, but the `file` and `filename` parameters are mutually exclusive.
 
-```
+```python
 class UploadArguments(TaskArguments):
     def __init__(self, command_line, **kwargs):
         super().__init__(command_line, **kwargs)
@@ -358,7 +358,7 @@ So, the `file` parameter has one `ParameterGroupInfo` that calls out the paramet
 
 If you're curious, the function used to get the list of files for the user to select is here:
 
-```
+```python
 async def get_files(self, inputMsg: PTRPCDynamicQueryFunctionMessage) -> PTRPCDynamicQueryFunctionMessageResponse:
         fileResponse = PTRPCDynamicQueryFunctionMessageResponse(Success=False)
         file_resp = await MythicRPC().execute("get_file", callback_id=inputMsg.Callback,

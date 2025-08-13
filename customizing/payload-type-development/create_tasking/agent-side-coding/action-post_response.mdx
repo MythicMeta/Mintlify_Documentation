@@ -8,7 +8,7 @@ The main difference between submitting a response with a `post_response` and sub
 
 The contents of the JSON message from the agent to Mythic when posting tasking responses is as follows:
 
-```
+```json
 Base64( CallbackUUID + JSON(
 {
 	"action": "post_response",
@@ -63,7 +63,7 @@ Anything you put in `user_output` will go directly to the user to see. There's n
 
 Mythic responds with the following message format for post\_response requests:
 
-```
+```json
 Base64( CallbackUUID + JSON(
 {
 	"action": "post_response",

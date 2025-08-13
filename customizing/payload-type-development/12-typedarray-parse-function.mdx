@@ -31,13 +31,13 @@ The list of options can go on and on and on. There's no ideal way to do it, and 
 
 This function takes in a list of strings formatted how the user presented it on the command line, such as:
 
-```
+```json
 [ "int:5", "char*:testing", "wstring:this is my string" ]
 ```
 
 The parse function should take that and split it back out into our array of arrays:
 
-```
+```json
 [ ["int": "5"], ["char*", "testing"], ["wstring", "this is my string"] ]
 ```
 

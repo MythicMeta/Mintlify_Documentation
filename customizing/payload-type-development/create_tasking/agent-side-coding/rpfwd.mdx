@@ -12,7 +12,7 @@ Reverse port forwards provide a way to tunnel incoming connections on one port o
 
 Agents transmit dictionary messages that look like the following:
 
-```
+```json
 {
   "exit": True,
   "server_id": 1234567,
@@ -39,7 +39,7 @@ In Python translation containers, if `exit` is True, then `data` can be `None`
 
 These RPFWD messages are passed around as an array of dictionaries in `get_tasking` and `post_response` messages via a (added if needed) `rpfwd` key:
 
-```
+```json
 {
     "action": "get_tasking",
     "tasking_size": 1,
@@ -62,7 +62,7 @@ These RPFWD messages are passed around as an array of dictionaries in `get_taski
 
 or in the `post_response` messages:
 
-```
+```json
 {
     "action": "post_response",
     "responses": [
@@ -86,6 +86,7 @@ or in the `post_response` messages:
         }
     ],
     "delegates": []
+}
 ```
 
 Notice that they're at the same level of "action" in these dictionaries - that's because they're not tied to any specific task, the same goes for delegate messages.

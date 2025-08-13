@@ -6,7 +6,7 @@ title: "8. Interactive Tasking"
 
 Messages for interactive tasking have three pieces:
 
-```
+```json
 {
     "task_id": "UUID of task",
     "data": "base64 of data",
@@ -18,7 +18,7 @@ If you have a command called `pty` and issue it, then when that task gets sent t
 
 The `data` is pretty straight forward - it's the base64 of the raw data you're trying to send to/from this interactive task. The `message_type` field is an enum of `int`. It might see complicated at first, but really it boils down to providing a way to support sending control codes through the web UI, scripting, and through an opened port.
 
-```
+```go
 const (
    Input = 0
    Output = 1
@@ -57,7 +57,7 @@ You'll probably notice that some letters are missing from the control codes abov
 
 This data is located in a similar way to SOCKS and RPFWD:
 
-```
+```json
 {
     "action": "some action",
     "interactive": [ {"task_id": UUID, "data": "base64", "message_type": 0 } ]
