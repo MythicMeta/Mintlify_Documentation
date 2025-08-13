@@ -6,10 +6,8 @@ title: "Webhooks"
 
 Webhooks are notified of certain events in an asynchronous manner and submit that data to pre-configured webhook URLs. Webhooks can take advantage of everything you can do via Scripting by using the MythicRPCAPITokenCreate functionality. This function provides a temporary, trackable API token that can be used to interact with the GraphQL API. The benefit here is that if you want or need more information than what's directly provided by the webhook message, you can fetch it from GraphQL.
 
-<Tabs>
-  <Tab title="Python"/>
-  <Tab title="Golang">
-  ```
+<CodeGroup>
+  ```go Go
     type WebhookDefinition struct {
     	Name                     string
     	Description              string
@@ -24,9 +22,11 @@ Webhooks are notified of certain events in an asynchronous manner and submit tha
     	OnContainerStartFunction func(sharedStructs.ContainerOnStartMessage) sharedStructs.ContainerOnStartMessageResponse
     }
     ```
-    for example:
+</CodeGroup>
 
-    ```
+for example:
+
+    ```go
     func Initialize() {
     	myWebhooks := webhookstructs.WebhookDefinition{
     		Name:                "my_webhooks",
@@ -40,7 +40,7 @@ Webhooks are notified of certain events in an asynchronous manner and submit tha
     ```
     There's also a built-in function you can leverage to get the webhook url and channel:
 
-    ```
+    ```go
     func newCallbackWebhook(input webhookstructs.NewCallbackWebookMessage) {
         newMessage := webhookstructs.GetNewDefaultWebhookMessage()
         newMessage.Channel = webhookstructs.AllWebhookData.Get("my_webhooks").GetWebhookChannel(input, webhookstructs.WEBHOOK_TYPE_NEW_CALLBACK)
@@ -57,8 +57,6 @@ Webhooks are notified of certain events in an asynchronous manner and submit tha
        ...
     }
     ```
-  </Tab>
-</Tabs>
 
 
 * `Name` - this is the name of your webhook container

@@ -6,10 +6,8 @@ title: "Logging"
 
 Many organizations that use Mythic have a need for the logs generated from it, either for tracking user actions, deconflictions, or as part of operations (such as purple teaming). Different teams also have different levels of detail needed from logs, different formats, and even different output styles (stdout, files, direct to a SIEM, etc). Because of this, Mythic outsources *most* of its logs to logging containers that can subscribe to various events and then do whatever they want with the data. The nice thing about having this as part of a container that's hooked up to Mythic is that you can get the initial logging message and then turn around and use MythicRPC and Mythic's Scripting to augment that data with more context that you might need before shipping it off.
 
-<Tabs>
-<Tab title="Python"/>
-<Tab title="Golang">
-```
+<CodeGroup>
+```go Go
 type LoggingDefinition struct {
 	Name                     string
 	Description              string
@@ -29,10 +27,11 @@ type LoggingDefinition struct {
 	OnContainerStartFunction func(sharedStructs.ContainerOnStartMessage) sharedStructs.ContainerOnStartMessageResponse
 }
 ```
+</CodeGroup>
 
 and creating it:
 
-```
+```go
 myLoggerName := "my_logger"
 myLogger := loggingstructs.LoggingDefinition{
     NewCallbackFunction: func(input loggingstructs.NewCallbackLog) {
@@ -61,8 +60,6 @@ loggingstructs.AllLoggingData.Get(myLoggerName).AddLoggingDefinition(myLogger)
 ```
 
 In this example we're just using the built-in logger and writing to stdout.
-</Tab>
-</Tabs>
 
 Most of these fields in the definition are pretty self explanatory. You don't need to fill out `subscriptions` though - that is auto populated based on which functions you provide and is used to update the MythicUI to indicate what logs you're collecting. In the Go example above and screenshot below, we didn't register a function for new responses, so in the UI you can see that the "test" button for new responses is disabled.
 

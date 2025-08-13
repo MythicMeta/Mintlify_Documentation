@@ -13,9 +13,8 @@ When creating a Payload type there's an option to specify an "AgentType". Normal
 
 This works exactly the same as normal "agent" Payload Types *except* you don't actually build anything. Instead, the commands you register are "injected" into callbacks of other Payload Types. Naturally, these commands either need to be self contained (i.e. they set their completed status to true and never get sent down to the agent) or they need to eventually result in some other command getting executed (i.e. spawning subtasks or changing their CommandName in their create tasking function so that the agent executes a different function).
 
-<Tabs>
-  <Tab title="Python">
-    ```
+<CodeGroup>
+    ```python Python
     class JXAAugment(PayloadType):
         name = "jxa_augment"
         file_extension = "js"
@@ -27,10 +26,7 @@ This works exactly the same as normal "agent" Payload Types *except* you don't a
         note = """This payload uses JavaScript for Automation (JXA) for execution on macOS boxes."""
         supports_dynamic_loading = True
     ```
-  </Tab>
-
-  <Tab title="Golang">
-    ```
+    ```go Go
     var payloadDefinition = agentstructs.PayloadType{
         Name:          "MyCustomCommands",
         Author:        "@its_a_feature_",
@@ -44,25 +40,7 @@ This works exactly the same as normal "agent" Payload Types *except* you don't a
         agentstructs.AllPayloadData.Get("MyCustomCommands").AddPayloadDefinition(payloadDefinition)
     }
     ```
-
-    Notice all we do in this example is say which kinds of callback OS we want these commands to get injected into and we specify the AgentType to be CommandAugment. We don't actually specify any build function.
-  </Tab>
-</Tabs>
-
-```
-var payloadDefinition = agentstructs.PayloadType{
-    Name:          "MyCustomCommands",
-    Author:        "@its_a_feature_",
-    SupportedOS:   []string{agentstructs.SUPPORTED_OS_LINUX, agentstructs.SUPPORTED_OS_MACOS},
-    Description:   "Extra commands I want added to all agents",
-    AgentType:     agentstructs.AgentTypeCommandAugment,
-    MessageFormat: agentstructs.MessageFormatJSON,
-}
-
-func Initialize() {
-    agentstructs.AllPayloadData.Get("MyCustomCommands").AddPayloadDefinition(payloadDefinition)
-}
-```
+</CodeGroup>
 
 Notice all we do in this example is say which kinds of callback OS we want these commands to get injected into and we specify the AgentType to be CommandAugment. We don't actually specify any build function.
 
