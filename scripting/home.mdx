@@ -15,13 +15,13 @@ To determine what it is you're trying to do, GraphQL has a leading action of `qu
 
 Authentication is via JSON Web Tokens (JWTs) and Mythic's API tokens. To use a JWT just specify in the headers:
 <CodeGroup>
-    ```json Header
-    Authorization: Bearer {token value}
-    ```
     ```json API Token
     apitoken: {tokenvalue}
     ```
 </CodeGroup>
+
+Despite API Tokens technically having an expiration time listed in the JWT, when used as the `apitoken` Header value, the expiration time isn't checked.
+Instead, the value itself is tracked in the Mythic database of `apitoken` to see if it exists, if it's deactivated, or if it's marked as deleted. Since these tokens don't expire, temporarily deactivating it or deleting it is how you remove its access.
 
 
 
