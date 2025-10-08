@@ -28,6 +28,8 @@ Depending on your language, update the associated Mythic Container library:
 * A new field, C2 Parameter Deviations, allows Payload Types to "modify" supported C2 Profile parameters to more closely align with their implementations
 * Payload Type definitions can now implement their own "help" function so you don't have to use Mythic's built-in help
     * you don't need to create a "command" for it, it's a new function that's available as part of your payload definition
+* Payload types can specify if they support multiple c2 selections in a payload or not (ex: http and tcp)
+* Payload types can specify if they support multiple instances of c2s in a payload or not (ex: 2 instances of httpx)
 
 ### Eventing
 
