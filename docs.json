@@ -149,7 +149,8 @@
                       "updating/mythic-2.3-greater-than-3.0-updates/agents-2.3-greater-than-3.0"
                     ]
                   },
-                  "updating/mythic-3.2-greater-than-3.3-updates"
+                  "updating/mythic-3.2-greater-than-3.3-updates",
+                  "updating/mythic-3.3-greater-than-3.4-updates"
                 ]
               }
             ]
