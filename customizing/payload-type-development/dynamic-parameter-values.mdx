@@ -1,12 +1,12 @@
 ---
-title: "7. Dynamic Parameter Values"
+title: "7. Dynamic Command Parameter Values"
 ---
 
-## What are dynamic parameters?
+## What are dynamic command parameters?
 
 Sometimes when creating a command, the options you present to the operator might not always be static. For example, you might want to present them with a list of files that have been download; you might want to show a list of processes to choose from for injection; you might want to reach out to a remote service and display output from there. In all of these scenarios, the parameter choices for a user might change. Mythic can now support this.
 
-## Where are dynamic parameters?
+## Where are dynamic command parameters?
 
 Since we're talking about a command's arguments, all of this lives in your Command's class that subclasses TaskArguments. Let's take an augmented `shell` example:
 

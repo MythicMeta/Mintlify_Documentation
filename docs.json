@@ -218,6 +218,7 @@
                       {
                         "group": "2. Payload Type Definition",
                         "pages": [
+                          "customizing/payload-type-development/payload-type-info/payload-type-definition",
                           "customizing/payload-type-development/payload-type-info/container-syncing",
                           "customizing/payload-type-development/payload-type-info/turning-a-vm-into-a-container"
                         ]

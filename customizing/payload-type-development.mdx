@@ -66,11 +66,11 @@ Now that you've seen the pieces and steps for installing an existing agent, it's
 
 The only thing that absolutely **MUST** exist within this folder is a `Dockerfile` so that `docker-compose` can build your image and start the container. You can use anything as your base image, but Mythic provides a few to help you get started with some various environments:
 
-- `itsafeaturemythic/mythic_go_base` has GoLang 1.21 installed
-- `itsafeaturemythic/mythic_go_dotnet` has GoLang 1.21 and .NET
-- `itsafeaturemythic/mythic_go_macos` has GoLang 1.21 and the macOS SDK
+- `itsafeaturemythic/mythic_go_base` has GoLang 1.25 installed
+- `itsafeaturemythic/mythic_go_dotnet` has GoLang 1.25 and .NET
+- `itsafeaturemythic/mythic_go_macos` has GoLang 1.25 and the macOS SDK
 - `itsafeaturemythic/mythic_python_base` has Python 3.11 and the `mythic_container` pypi package
-- `itsafeaturemythic/mythic_python_go` has Python 3.11, the `mythic_container` pypi package, and GoLang v1.21
+- `itsafeaturemythic/mythic_python_go` has Python 3.11, the `mythic_container` pypi package, and GoLang v1.25
 - `itsafeaturemythic/mythic_python_macos` has Python 3.11, the `mythic_container` pypi package, and the macOS SDK
 
 This allows two payload types that might share the same language to still have different environment variables, build paths, tools installed, etc. Docker containers come into play for a few things:
