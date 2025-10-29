@@ -113,9 +113,9 @@ The `PayloadUUID` (string) and `C2ProfileName` fields are required, everything e
 
 This function allows you to ask Mythic to decrypt a message from a specified callback. To do this, Mythic needs a few pieces of information that it would normally automatically get:
 
-* `AgentCallbackUUID` - this is the string UUID of the callback and how Mythic looks up a lot of crypto information
+* `AgentCallbackID` - this is the string UUID of the callback and how Mythic looks up a lot of crypto information
 * `Message` - the actual bytes of the message you want decrypted
-* `IncludesUUID` - indicating if `Message` starts with the `AgentCallbackUUID` or not
+* `IncludesUUID` - indicating if `Message` starts with the `AgentCallbackID` or not
 * `IsBase64Encoded` - indicates if `Message` is a base64 blob or not
 * `C2Profile` - the name of the C2 profile that this message would have come from, this helps Mythic look up the proper crypto pieces if needed
 
@@ -125,13 +125,17 @@ This function allows you to take a callback's Display ID and an associated Opera
 
 #### SendMythicRPCCallbackEdgeSearch
 
-This function allows you to look for "edges" that exist (or existed at one point) for a specific callback. You need to supply either `AgentCallbackUUID` (string uuid) or `AgentCallbackID` (int) to do this search and then you can filter by `SearchC2ProfileName` or `SearchActiveEdgesOnly`.
+This function allows you to look for "edges" that exist (or existed at one point) for a specific callback. You need to supply either `AgentCallbackID` (string uuid) or `CallbackID` (int) to do this search and then you can filter by `SearchC2ProfileName` or `SearchActiveEdgesOnly`.
+
+#### SendMythicRPCCallbackEdgeRemove
+
+This functions allows you to mark callback graph edges as done. You need to specify the source and destination CallbackID values as well as the name of the C2 Profile. This data can be easily gathered via the Search command above.
 
 #### SendMythicRPCCallbackEncryptBytes
 
 This function allows you to do the opposite of `SendMythicRPCCallbackDecryptBytes`. To encrypt a message, you need to supply a few pieces of information to help scope things properly:
 
-* `AgentCallbackUUID` - the string UUID that the agent callback knows itself by
+* `AgentCallbackID` - the string UUID that the agent callback knows itself by
 * `Message` - the bytes of the message you want to encrypt
 * `IncludeUUID` - indicate if the resulting encrypted blob should include the UUID in front or not
 * `Base64ReturnMessage` - indicate if you want the resulting message to be base64 encoded or not
@@ -147,7 +151,7 @@ This function is the opposite of the `SendMythicRPCCallbackAddCommand` function 
 
 #### SendMythicRPCCallbackSearch
 
-This function allows you to search for callbacks. You must supply either `AgentCallbackUUID` (string) or `AgentCallbackID` (int) to scope the query down to the right operation. All of the other fields that start with `Search*` are ways that you can optionally filter down your search results.
+This function allows you to search for callbacks. You must supply either `AgentCallbackID` (string) or `CallbackID` (int) to scope the query down to the right operation. All of the other fields that start with `Search*` are ways that you can optionally filter down your search results.
 
 #### SendMythicRPCCallbackUpdate
 
@@ -155,7 +159,7 @@ This function allows you to update aspects of a callback. You must supply one of
 
 * `TaskID` - this scopes your operation and the callback to update is the one to which this task belongs
 * `CallbackID` (int) - this scopes your operation and updates this callback
-* `AgentCallbackUUID` (string) - this scopes your operation and updates this callback
+* `AgentCallbackID` (string) - this scopes your operation and updates this callback
 
 All of the other fields are things that you can update about the callback itself.
 
@@ -230,7 +234,6 @@ The `TaskID` field is required and allows Mythic to appropriately scope the quer
 #### SendMythicRPCHandleAgentJSON
 
 This function allows you to send a normal full agent JSON message to Mythic for processing. You need to specify either the `CallbackID` (int) or `AgentCallbackID` (uuid string) of the callback where this message is coming from.
-You also need to supply the name of the C2 profile where the message is coming from.
 
 #### SendMythicRPCKeylogCreate
 
@@ -244,7 +247,7 @@ The `TaskID` parameter is required as it allows Mythic to scope the query to the
 
 #### SendMythicRPCOperationEventLogCreate
 
-This function allows you to send a message to the event log. You need to provide either `TaskId`, `CallbackId`, `CallbackAgentId`, or `OperationId` to appropriately scope the message to the right operation.
+This function allows you to send a message to the event log. You need to provide either `TaskID`, `CallbackID`, `AgentCallbackID`, or `OperationID` to appropriately scope the message to the right operation.
 After that, the `message` is what you actually want to send and the `MessageLevel` indicates if you want it to be a `warning`, `debug`, or `info` message.
 
 #### SendMythicRPCPayloadAddCommand
