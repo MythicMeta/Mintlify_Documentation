@@ -9,7 +9,7 @@
   },
   "integrations": {
     "plausible": {
-      "domain": "wiki.mythic-c2.net"
+      "domain": "docs.mythic-c2.net"
     }
   },
   "favicon": "/favicon.png",
