@@ -175,6 +175,10 @@ In this `MythicRPCCallbackTokenCreateCallbackTokenData` object, `action` will be
 
 This function is the opposite of the `SendMythicRPCCallbackTokenCreate` function and all you need to do differently is switch the `action` to `remove` instead of `add`.
 
+#### SendMythicRPCCallbackTokenSearch
+
+This function takes in a CallbackID that you're interested in and returns data about all of the associated callback tokens. You can then feed this into the `SendMythicRPCCallbackTokenRemove` command if needed.
+
 #### SendMythicRPCCommandSearch
 
 This function allows you to search for commands in general across payload types (not ones loaded into callbacks or baked into payloads).
@@ -190,10 +194,15 @@ The `CredentialType` options are: plaintext, certificate, hash, key, ticket, coo
 
 This function allows you to search for specific credentials within Mythic's credential store. The `TaskID` is required so that the query can be scoped to the right operation. After that, the `SearchCredentials` object allows you to specify what kinds of data you're looking for.
 
+#### SendMythicRPCCustomBrowserSearch
+
+This command allows you to search for data in CustomBrowsers. You must supply a `TreeType` which is the kind of custom browser along with a, `OperationID`, `Host`, and a `CallbackGroup` which help scope your search down to the right data.
+
 #### SendMythicRPCFileCreate
 
 This function allows you to register bytes to a file within Mythic and track metadata about it. This is needed if you want to then chunk up and transfer a file down to an agent.
 The `TaskID` (int), `PayloadUUID` (string), or `AgentCallbackID` (string) values are required to appropriately scope the operation where this file will be created. Only one of them is needed.
+If you have none of those, `OperationID` (int) and `OperatorID` (int) can be used instead - these two things are supplied for the custom browser export functionality for this reason.
 
 `FileContents` is the actual bytes that you want saved to disk. `DeleteAfterFetch` allows you to specify if the file should be deleted from Mythic's disk after the agent successfully fetches it (this can be useful so that you don't clutter the disk or the UI with temporary files).
 The `Filename` is self explanatory, along with `IsScreenshot` and `IsDownloadFromAgent`. These pieces allow you to provide some extra context about the file. If this file is going to be hosted on a remote target somewhere, you can optionally specify `TargetHostName` and `RemotePathOnTarget` so that Mythic's UI can properly track it.

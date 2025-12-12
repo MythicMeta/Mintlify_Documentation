@@ -1,0 +1,206 @@
+---
+title: "5. Custom Browsers"
+---
+
+
+## What is this?
+
+Custom Browsers allow you to collect and represent data in a "file browser"-like view, but for anything that has a hierarchical/tree structure to it.
+
+## What does this mean?
+
+Custom Browsers are a new kind of container you can create that define how the "browser" view should work.
+Any agent is then able to "hook" into these browsers by reporting data back in a specific way.
+
+<CodeGroup>
+    ```python Python
+    class LdapBrowser(CustomBrowser):
+        name = "ldap_browser"
+        description = "A browser for LDAP information."
+        author = "@its_a_feature_"
+        semver = "0.0.1"
+        indicate_partial_listing = False
+        show_current_path = True
+        path_separator = ","
+        row_actions = [
+            CustomBrowserRowAction(
+                Name="Set Attribute",
+                UIFeature="ldap_browser:set_attribute",
+                SupportsFile=True,
+                SupportsFolder=True,
+                OpenDialog=True,
+                GetConfirmation=False,
+                Icon="fa-pen-to-square",
+                Color="warning"
+            )
+        ]
+        columns = [
+            CustomBrowserTableColumn(
+                Key="samaccountname",
+                Name="Account",
+                FillWidth=True,
+                Width=100,
+                DisableSort=False,
+                DisableFilterMenu=False,
+                DisableDoubleClick=False,
+                ColumnType=CustomBrowserTableColumnType.String
+            ),
+            CustomBrowserTableColumn(
+                Key="description",
+                Name="Description",
+                FillWidth=True,
+                Width=100,
+                DisableSort=False,
+                DisableFilterMenu=False,
+                DisableDoubleClick=False,
+                ColumnType=CustomBrowserTableColumnType.String
+            )
+        ]
+        default_visible_columns = [
+            "Account", "Description"
+        ]
+        extra_table_inputs = [
+            CustomBrowserExtraTableTaskingInput(
+                Name="query",
+                DisplayName="Query",
+                Description="LDAP Query",
+                Required=True,
+            ),
+            CustomBrowserExtraTableTaskingInput(
+                Name="attributes",
+                DisplayName="Attributes",
+                Description="Comma separated list of attributes to fetch",
+            )
+        ]
+        export_function = export_ldap_browser
+    ```
+    ```go Go
+    func Initialize() {
+    	registry := custombrowserstructs.CustomBrowserDefinition{
+    		Name:          "registry_browser",
+    		Description:   fmt.Sprintf("Basic Windows registry browser"),
+    		Author:        "@its_a_feature_",
+    		SemVer:        version,
+    		Type:          custombrowserstructs.CUSTOMBROWSER_TYPE_FILE,
+    		PathSeparator: "\\",
+    		Columns: []custombrowserstructs.CustomBrowserTableColumn{
+    			{
+    				Key:       "type",
+    				Name:      "Type",
+    				Type:      "string",
+    				Width:     100,
+    				FillWidth: false,
+    			},
+    			{
+    				Key:       "value",
+    				Name:      "Value",
+    				Type:      "string",
+    				FillWidth: true,
+    			},
+    		},
+    		RowActions: []custombrowserstructs.CustomBrowserRowAction{
+    			{
+    				Name:           "Set Value",
+    				SupportsFile:   true,
+    				SupportsFolder: true,
+    				OpenDialog:     true,
+    				UIFeature:      "registry_browser:set_value",
+    				Icon:           "fa-pen-to-square",
+    				Color:          "warning",
+    			},
+    			{
+    				Name:           "Create Key",
+    				SupportsFile:   false,
+    				SupportsFolder: true,
+    				OpenDialog:     true,
+    				UIFeature:      "registry_browser:create_key",
+    				Icon:           "fa-folder-plus",
+    				Color:          "success",
+    			},
+    		},
+    		DefaultVisibleColumns:      []string{"Type", "Value"},
+    		IndicatePartialListingInUI: true,
+    		ShowCurrentPathAboveTable:  true,
+    	}
+    	custombrowserstructs.AllCustomBrowserData.Get(registry.Name).AddCustomBrowserDefinition(registry)
+    }
+    ```
+</CodeGroup>
+
+There's a few things to call out for what we're defining here:
+
+* `PathSeparator` - This is how Mythic is able to separate out the various pieces of your hierarchy path to create needed elements. Some examples include `\` and `/` for normal paths, but also things like `,` for an LDAP path (ex: `CN=test,DC=domain,DC=com`)
+* `Columns` - Since this browser view has a "tree" on one side and a table of data on the other, you can define how that table is presented. The `Columns` here define what to display. `key` is the name of the field in your `metadata` to actually display whereas `name` is the name of the column shown to the user. You can opt to give a specific default width to the column with `width` or specify `fillWidth` to True and tell Mythic to use the remaining space. There's a few other attributes to allow you to optionally disable certain filters/sorts on the column as well. The various "types" specify what to do with the data and how to present/sort it.
+* `RowActions` - When right clicking a row in the table view, you can optionally provide actions that agents can hook into. The specific command is looked up via `UIFeature` like most things, but you can specify if this command is only for file or folders as well if we should `getConfirmation` (yes/no dialog) or `openDialog` to open the modal for more information. The name is whatever you want displayed when the user right-clicks the column and the icon/color are the same as that goes with browser scripting. You can identify any icon from font awesome's solid icons by name and any color you want to use as well.
+* `DefaultVisibleColumns` - You might have 8 different columns, but showing all of those by default at once might make things really hard to read unless you have a really wide monitor. To help with this, you can specify which columns are visible by default by their `Name`.
+* `IndicatePartialListingInUI` - As you've potentially noticed with the file browser, if you have some data for a "folder" but haven't explicitly listed its contents before, Mythic will show a little overlay telling you this information and prompting you to actually list the contents. This setting allows you to toggle that off.
+* `ShowCurrentPathAboveTable` - By default, if you click on `Desktop` in `/Users/itsafeature`, then the top bar of the table will show `/Users/itsafeature/Desktop`. That makes sense in many scenarios, but not necessarily all of them. If you'd like the user to be able to click around _without_ modifying that top bar automatically, you can toggle that here.
+* `ExtraTableInputs` - Since this is a "file" browser, when you issue a "list" command, you by default get sent the host, full path, filename, and path that was listed. However, your browser might need or offer _more_ pieces of information. For example, the `ldap` browser allows you to specify a `query` filter and an `attributes` list. To expose these options, we use the `ExtraTableInputs` array and list out the fields that we offer, along with if they're required or not.
+
+### How does an agent hook into this?
+
+Like most things, the agent sends back data in the `responses` array, but with a new key:
+
+```json
+{
+    "action": "post_response",
+    "responses": [
+        {
+            "task_id": "uuid here",
+            "custom_browser": {
+                "browser_name": "name of the custom browser you're reporting data for",
+                "host": "name of the host that this data is for",
+                "update_deleted": false,
+                "set_as_user_output": false,
+                "entries": [
+                    {
+                        "name": "name of this entry",
+                        "parent_path": "path of parent entry or \"\" if this is a root node",
+                        "display_path": "different path you'd want displayed in the resulting table if you want it to be different than parent_path + separator + name",
+                        "success": true,
+                        "can_have_children": true,
+                        "metadata": {},
+                        "children": [
+                            {
+                                "name": "name of child entry",
+                                "display_path": "display path of child entry if different than parent_path + separator + name",
+                                "can_have_children": false,
+                                "metadata": {}
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}
+```
+
+I know that seems complicated, but it's very similar to file browser data with a few tweaks:
+
+* `browser_name` - this is just the name of the browser you want to submit data for
+* `host` - this is the name of the host you're submitting data for, this could be anything. For example, with `ldap_browser`, the `host` field is the domain, so `dc=domain,dc=com`
+* `update_deleted` - set this to true if you want mythic to mark anything that used to be in these entries but isn't present here as "deleted"
+* `set_as_user_output` - set this to true if you want mythic to echo this entire `custom_browser` data as `user_output` to show to the user. This is helpful if you have a browser script you want to use for the data, but don't want to explicitly submit the same data as `custom_browser` and again as a string in `user_output`
+* `entries` - this is an array of entries, each one distinct and processed separately
+* `entries.name` - this is the name of a specific entry
+* `entries.parent_path` - this is the parent path of the specific entry without any trailing path separator. If the entry is the root node, then you can specify the `parent_path` as just `""`
+* `entries.display_path` - this is one of the parts that differs from the normal file browser data.
+    * sometimes the data you want to display is organized in a hierarchical fashion, but it might not be structured in the best way. Let's look at an example for ldap:
+    * LDAP data is structured in a hierarchical way: `CN=Administrator,CN=Users,DC=sevenkingdoms,DC=local` however, notice that the order is _backwards_ from something like a file browser. In order to process this as a normal hierarchy, we need `DC=local,DC=sevenkingdoms,CN=Users,CN=Administrator`.
+    * To account for this, we set `name` to `CN=Administrator`, `parent_path` to `DC=local,DC=sevenkingdoms,CN=Users`, but then `display_path` to `CN=Administrator,CN=Users,DC=sevenkingdoms,DC=local`.
+    * The way this manifests is that you get a proper tree hierarchy, but when you click on any actual entry, the path displayed at the top of the table is the one that "makes sense" for the data (i.e. backwards).
+* `entries.success` - setting this to `true` means you'll get a green checkmark and confirmation that you successfully listed the contents of this "folder". Setting this to `false` will give a red exclamation mark. Not setting it at all (i.e. null) will result in no marking.
+* `entries.can_have_children` - setting this to `true` marks this entry as a "folder" in the browser sense
+* `entries.metadata` - this is an arbitrary dictionary of data you can specify. Your `Columns` from the Custom Browser definition have `key` values specified - those keys are expected to be in this `metadata` so that the right things can be rendered in the table for the user. You can of course have extra keys here and you can view them at any time in the UI as well.
+* `entries.children` - this is where you can specify any direct children for this entry
+    * notice that the `children` array doesn't have _another_ `children` field - if you want to recursively provide this data, add new `entries`
+
+
+### How does an agent hook into the UI buttons for this?
+
+You have an agent can that report back the right JSON data, but you're wondering how to get your command called when the user clicks the list button in the UI for this new custom browser?
+
+This is the same as the other "browsers" - say the name of the custom browser is `ldap_browser`, so for the list button you'll have `ldap_browser:list` in your `supported_ui_features` for your command.
+
+Every other tasking capability through the `row_actions` will specify its needed UI feature (ex: `UIFeature="ldap_browser:set_attribute",`)
