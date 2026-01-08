@@ -1,10 +1,11 @@
 ---
-title: "6. File Hosting"
+title: "5. File Hosting"
 ---
 
 ## What is it?
 
-There are times you want to host a file or payload through your C2 channel at a custom endpoint. However, every C2 profile works a bit differently; so, there needs to be a way to universally tell the C2 profile to host a file in its own way at a certain endpoint.
+There are times you want to host a file or payload through your C2 channel at a custom endpoint.
+However, every C2 profile works a bit differently; so, there needs to be a way to universally tell the C2 profile to host a file in its own way at a certain endpoint.
 
 ## What does it look like?
 
@@ -12,7 +13,7 @@ Below is the function definition to include with your C2 profile to host a custo
 
 <Tabs>
   <Tab title="Python">
-    ```
+    ```python
     async def host_file(self, inputMsg: C2HostFileMessage) -> C2HostFileMessageResponse:
         """Host a file through a c2 channel
 
@@ -27,10 +28,10 @@ Below is the function definition to include with your C2 profile to host a custo
   </Tab>
 
   <Tab title="Golang">
-    ```
+    ```go
     HostFileFunction           func(message C2HostFileMessage) C2HostFileMessageResponse
     ```
-    ```
+    ```go
     package c2structs
 
     type C2_HOST_FILE_STATUS = string

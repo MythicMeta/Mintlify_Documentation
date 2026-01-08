@@ -1,0 +1,140 @@
+<Tree>
+  <Tree.Folder name="app" defaultOpen>
+    <Tree.File name="layout.tsx" />
+    <Tree.File name="page.tsx" />
+    <Tree.Folder name="api" defaultOpen>
+      <Tree.Folder name="auth">
+        <Tree.File name="route.ts" />
+      </Tree.Folder>
+      <Tree.File name="route.ts" />
+    </Tree.Folder>
+    <Tree.Folder name="components">
+      <Tree.File name="button.tsx" />
+      <Tree.File name="dialog.tsx" />
+      <Tree.File name="tabs.tsx" />
+    </Tree.Folder>
+  </Tree.Folder>
+  <Tree.File name="package.json" />
+</Tree>
+
+<Tooltip headline="API" tip="Application Programming Interface: a set of protocols for software applications to communicate." cta="Read our API guide" href="/api-reference">API</Tooltip> documentation helps developers understand how to integrate with your service.
+
+
+<Tabs>
+  <Tab title="First tab">
+    ☝️ Welcome to the content that you can only see inside the first tab.
+
+    You can add any number of components inside of tabs. For example, a code block:
+    ```java HelloWorld.java
+      class HelloWorld {
+          public static void main(String[] args) {
+              System.out.println("Hello, World!");
+          }
+      }
+    ```
+  </Tab>
+  <Tab title="Second tab" icon="leaf">
+    ✌️ Here's content that's only inside the second tab.
+
+    This one has a <Icon icon="leaf" /> icon!
+  </Tab>
+  <Tab title="Third tab">
+    💪 Here's content that's only inside the third tab.
+  </Tab>
+</Tabs>
+
+<Panel>
+  <Info>Pin info to the side panel. Or add any other component.</Info>
+</Panel>
+
+<Columns cols={2}>
+  <Card title="Get started">
+    Set up your project with our quickstart guide.
+  </Card>
+  <Card title="API reference">
+    Explore endpoints, parameters, and examples for your API.
+  </Card>
+</Columns>
+
+
+<CodeGroup>
+
+```javascript helloWorld.js
+console.log("Hello World");
+```
+
+```python hello_world.py
+print('Hello World!')
+```
+
+```java HelloWorld.java
+class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}
+```
+
+</CodeGroup>
+
+<CodeGroup dropdown>
+
+```javascript helloWorld.js
+console.log("Hello World");
+```
+
+```python hello_world.py
+print('Hello World!')
+```
+
+```java HelloWorld.java
+class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}
+```
+</CodeGroup>
+
+```javascript Title example
+const hello = "world";
+```
+
+```ts twoslash Twoslash example
+type Pet = "cat" | "dog" | "hamster";
+
+function adoptPet(name: string, type: Pet) {
+  return `${name} the ${type} is now adopted!`;
+}
+
+// Hover to see the inferred types
+const message = adoptPet("Mintie", "cat");
+```
+
+<Note>This adds a note in the content</Note>
+<Warning>This raises a warning to watch out for</Warning>
+<Info>This draws attention to important information</Info>
+<Tip>This suggests a helpful tip</Tip>
+<Danger>This is a danger callout</Danger>
+<Callout icon="key" color="#FFC107" iconType="regular">This is a custom callout</Callout>
+
+
+<Badge icon="star" color="blue" size="lg" shape="pill">Premium</Badge>
+<Badge icon="check" stroke color="green" size="sm">Verified</Badge>
+<Badge icon="badge-alert" color="orange" shape="rounded">Beta</Badge>
+<Badge shape="rounded">Badge</Badge>
+<Badge shape="pill">Badge</Badge>
+<Badge size="xs">Badge</Badge>
+<Badge size="sm">Badge</Badge>
+<Badge size="md">Badge</Badge>
+<Badge size="lg">Badge</Badge>
+
+[Quickstart](/quickstart)
+[Steps](/components/steps)
+[Markdown Guide](https://www.markdownguide.org/)
+
+| Property | Description                           |
+| -------- | ------------------------------------- |
+| Name     | Full name of user                     |
+| Age      | Reported age                          |
+| Joined   | Whether the user joined the community |

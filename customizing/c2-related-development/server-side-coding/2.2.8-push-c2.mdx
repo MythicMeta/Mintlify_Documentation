@@ -1,5 +1,5 @@
 ---
-title: "9. Push C2"
+title: "8. Push C2"
 ---
 
 ## What is it?
@@ -16,95 +16,91 @@ In the mythic UI, the last checkin time will change to 1970-01-01 and appear as 
 
 Below are some simplified examples of working with this gRPC. An example of this Push style C2 as part of websockets is available with the `websocket` C2 profile.
 
-<Tabs>
-  <Tab title="Python">
-    ```
-    from mythic_container.grpc.pushC2GRPC_pb2_grpc import PushC2Stub
-    from mythic_container.grpc import pushC2GRPC_pb2 as grpcFuncs
-    import grpc.aio
+<CodeGroup dropdown>
+```python
+from mythic_container.grpc.pushC2GRPC_pb2_grpc import PushC2Stub
+from mythic_container.grpc import pushC2GRPC_pb2 as grpcFuncs
+import grpc.aio
 
-    async def handleStreamConnection(client):
-        global UUIDToWebsocketConn
-        global grpcStream
-        try:
-            while True:
-                grpcStream = client.StartPushC2Streaming()
-                # first send a connect message telling Mythic who this is
-
-                logger.info(f"Connected to gRPC for pushC2 Streaming")
-                async for request in grpcStream:
-                    # this is streaming responses from Mythic to go to agents
-                    try:
-                        # do something with request
-                    except Exception as d:
-                        logger.exception(f"Failed to process handleStreamConnection message:\n{d}")
-
-                logger.error(f"disconnected from gRPC for handleStreamConnection")
-        except Exception as e:
-            logger.exception(f"[-] exception in handleStreamConnection: {e}")
-
-    async def handleGrpcStreamingServices():
-        maxInt = 2 ** 31 - 1
+async def handleStreamConnection(client):
+    global UUIDToWebsocketConn
+    global grpcStream
+    try:
         while True:
-            try:
-                logger.info(f"Attempting connection to gRPC for pushC2...")
-                channel = grpc.aio.insecure_channel(
-                    f'127.0.0.1:17444',
-                    options=[
-                        ('grpc.max_send_message_length', maxInt),
-                        ('grpc.max_receive_message_length', maxInt),
-                    ])
-                await channel.channel_ready()
-                client = PushC2Stub(channel=channel)
-                streamConnections = handleStreamConnection(client)
-                logger.info(f"[+] Successfully connected to gRPC for pushC2")
-                await asyncio.gather(streamConnections)
-            except Exception as e:
-                logger.exception(f"Translation gRPC services closed for pushC2: {e}")
+            grpcStream = client.StartPushC2Streaming()
+            # first send a connect message telling Mythic who this is
 
-    asyncio.run(handleGrpcStreamingServices())
-    ```
-  </Tab>
+            logger.info(f"Connected to gRPC for pushC2 Streaming")
+            async for request in grpcStream:
+                # this is streaming responses from Mythic to go to agents
+                try:
+                    # do something with request
+                except Exception as d:
+                    logger.exception(f"Failed to process handleStreamConnection message:\n{d}")
 
-  <Tab title="Golang">
-    ```
-    PushConn := mythicGRPC.GetNewPushC2ClientConnection()
-    grpcClient := services.NewPushC2Client(PushConn)
-    streamContext, cancel := context.WithCancel(context.Background())
-    defer func() {
-        cancel()
-    }()
-    grpcStream, err := grpcClient.StartPushC2Streaming(streamContext)
-    if err != nil {
-    	log.Printf("Failed to get new client: %v\n", err)
-    	return
-    } else {
-    	log.Printf("Got new push client")
-    }
-    // sending a message from an agent to Mythic
-    readErr = grpcStream.Send(&services.PushC2MessageFromAgent{
-    	C2ProfileName: "websocket",
-    	RemoteIP:      websocketClient.RemoteAddr().String(),
-    	TaskingSize:   0,
-    	Message:       nil,
-    	Base64Message: []byte(fromAgent.Data),
-    })
-    if readErr != nil {
-    	log.Printf("failed to send message to grpc stream: %v\n", readErr)
-    	grpcStream.CloseSend()
-    	return
-    }
-    // getting a message from Mythic
-    fromMythic, readErr := grpcStream.Recv()
-    if readErr != nil {
-    	log.Printf("Failed to read from grpc stream, closing connections: %v\n", readErr)
-    	grpcStream.CloseSend()
-    	return
-    }
-    dataContent := fromMythic.GetMessage(
-    ```
-  </Tab>
-</Tabs>
+            logger.error(f"disconnected from gRPC for handleStreamConnection")
+    except Exception as e:
+        logger.exception(f"[-] exception in handleStreamConnection: {e}")
+
+async def handleGrpcStreamingServices():
+    maxInt = 2 ** 31 - 1
+    while True:
+        try:
+            logger.info(f"Attempting connection to gRPC for pushC2...")
+            channel = grpc.aio.insecure_channel(
+                f'127.0.0.1:17444',
+                options=[
+                    ('grpc.max_send_message_length', maxInt),
+                    ('grpc.max_receive_message_length', maxInt),
+                ])
+            await channel.channel_ready()
+            client = PushC2Stub(channel=channel)
+            streamConnections = handleStreamConnection(client)
+            logger.info(f"[+] Successfully connected to gRPC for pushC2")
+            await asyncio.gather(streamConnections)
+        except Exception as e:
+            logger.exception(f"Translation gRPC services closed for pushC2: {e}")
+
+asyncio.run(handleGrpcStreamingServices())
+```
+
+```go
+PushConn := mythicGRPC.GetNewPushC2ClientConnection()
+grpcClient := services.NewPushC2Client(PushConn)
+streamContext, cancel := context.WithCancel(context.Background())
+defer func() {
+    cancel()
+}()
+grpcStream, err := grpcClient.StartPushC2Streaming(streamContext)
+if err != nil {
+    log.Printf("Failed to get new client: %v\n", err)
+    return
+} else {
+    log.Printf("Got new push client")
+}
+// sending a message from an agent to Mythic
+readErr = grpcStream.Send(&services.PushC2MessageFromAgent{
+    C2ProfileName: "websocket",
+    RemoteIP:      websocketClient.RemoteAddr().String(),
+    TaskingSize:   0,
+    Message:       nil,
+    Base64Message: []byte(fromAgent.Data),
+})
+if readErr != nil {
+    log.Printf("failed to send message to grpc stream: %v\n", readErr)
+    grpcStream.CloseSend()
+    return
+}
+// getting a message from Mythic
+fromMythic, readErr := grpcStream.Recv()
+if readErr != nil {
+    log.Printf("Failed to read from grpc stream, closing connections: %v\n", readErr)
+    grpcStream.CloseSend()
+    return
+}
+dataContent := fromMythic.GetMessage()
+```
+</CodeGroup>
 
 
 ### Agent Expectations
@@ -125,19 +121,37 @@ There are two types of Push C2. They both function largely the same, but within 
 
 The first one is probably the most common, one-to-one. This means that for every agent that connects to the C2 server (typically with a held-open connection like a WebSocket), the C2 server also opens one gRPC connection to Mythic. The following is a diagram what this means:
 
-<Frame>
-    <img src="/images/version-3.3/image-1-67.png"/>
-</Frame>
+```mermaid
+sequenceDiagram
+    autonumber
+    participant M as Mythic
+    participant C as C2 Server
+    participant A1 as Agent1
+    participant A2 as Agent2
+    A1 ->>+ C: Establish WebSocket1
+    C ->>+ M: Establish gRPC1
+    A2 ->>+ C: Establish Websocket2
+    C ->>+ M: Establish gRPC2
+    M ->> C: Issue task to Agent1 (gRPC1)
+    C ->>+ A1: Issue Task to Agent1 (Websocket1)
+    A1 -->>- C: Task Response (Websocket1)
+    C -->> M: Task Response (gRPC1)
+    A2 -->> C: Agent2 Exits Websocket2
+    C -->>- M: Agent2 Exits gRPC2
+    A1 -->> C: Agent1 Exits Websocket1
+    C -->>- M: Agent1 Exits gRPC1
+```
+
 
 In this case, the C2 server connects via:
 
-```
+```go
 grpcClient.StartPushC2Streaming(streamContext)
 ```
 
 The first C2 server is just acting like a proxy in this case and forwards the agent's messages along.
 
-```
+```go
 grpcStream.Send(&services.PushC2MessageFromAgent{
     C2ProfileName: "websocket",
     RemoteIP:      websocketClient.RemoteAddr().String(),
@@ -150,7 +164,7 @@ The above snippet shows an example of sending a message from an agent - we speci
 
 Once Mythic is done processing a message, we can send the response back to the agent:
 
-```
+```go
 fromMythic, readErr := grpcStream.Recv()
 if readErr != nil {
     log.Printf("Failed to read from grpc stream, closing connections: %v\n", readErr)
@@ -163,13 +177,28 @@ fromMythic.GetMessage() // do something with the message from Mythic
 
 The other type of Push C2 is one-to-many. This functions largely the same as one-to-one, except that the C2 server only ever opens up one gRPC connection to Mythic with many agents that go through it. Below is a diagram showing this flow:
 
-<Frame>
-    <img src="/images/version-3.3/image-1-68.png"/>
-</Frame>
+```mermaid
+sequenceDiagram
+    autonumber
+    participant M as Mythic
+    participant C as C2 Server
+    participant A1 as Agent1
+    participant A2 as Agent2
+    C ->>+ M: Establish gRPC
+    A1 ->>+ C: Establish WebSocket1
+    A2 ->>+ C: Establish Websocket2
+    M ->> C: Issue task to Agent1 (gRPC)
+    C ->>+ A1: Issue Task to Agent1 (Websocket1)
+    A1 -->>- C: Task Response (Websocket1)
+    C -->> M: Task Response (gRPC)
+    A2 -->> C: Agent2 Exits Websocket2
+    A1 -->> C: Agent1 Exits Websocket1
+    C -->> M: End flow
+```
 
 Because of this, we need to make sure that the user understands that all agents using this C2 profile are sharing a connection with Mythic. We start this connection by telling Mythic that our C2 profile wants to open a oneToMany stream:
 
-```
+```go
 grpcStream = client.StartPushC2StreamingOneToMany()
 await grpcStream.write(grpcFuncs.PushC2MessageFromAgent(
     C2ProfileName="websocket"
@@ -182,7 +211,7 @@ At this point, everything works the same as before with the one-to-one profile. 
 
 This stream utilizes a `TrackingID` that's supplied by the C2 profile to track these individual streams:
 
-```
+```go
 await grpcStream.write(grpcFuncs.PushC2MessageFromAgent(
     C2ProfileName="websocket",
     RemoteIP=str(websocketConn.remote_address),
@@ -193,7 +222,7 @@ await grpcStream.write(grpcFuncs.PushC2MessageFromAgent(
 
 This `TrackingID` is something generated by the C2 profile when sending messages and is echoed back as part of the responses that Mythic sends. This allows a C2 Profile to do the proper correlation with messages it gets back and which agent to send it to. This data is saved and tracked by Mythic so that it can be used even when Mythic is the one sending the initial piece of data (like a new task). Let's look at a slightly more complete example to see how that works:
 
-```
+```python
 import asyncio
 import uuid
 
@@ -308,7 +337,7 @@ When we get data back from the gRPC stream, we use the same `TrackingID` that's 
 
 There's one additional piece here that hasn't been covered yet though - `AgentDisconnected`. Since all agents on the other side of this gRPC connection are sharing the one connection to Mythic, if that gRPC connection exits, then Mythic detects that and marks **ALL** agents that use that C2 profile has having lost that connection. However, what if just *one* agent on the other end disconnects? The main gRPC connection is still there, so we need a way to inform Mythic that one remote connection is gone. This is where the `AgentDisconnected` piece comes into play:
 
-```
+```python
 await grpcStream.write(grpcFuncs.PushC2MessageFromAgent(
                     C2ProfileName="websocket",
                     RemoteIP=str(websocketConn.remote_address),

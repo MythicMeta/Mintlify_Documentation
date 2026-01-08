@@ -1,5 +1,5 @@
 ---
-title: "7. Redirect Rules"
+title: "6. Redirect Rules"
 ---
 
 ## What is it?
@@ -20,7 +20,7 @@ The format of the function is as follows:
 
 <Tabs>
   <Tab title="Python">
-    ```
+    ```python
     async def redirect_rules(request: C2ProfileBase.C2GetRedirectorRulesMessage) -> C2ProfileBase.C2GetRedirectorRulesMessageResponse:
         return C2ProfileBase.C2GetRedirectorRulesMessageResponse(
             Success=True,
@@ -30,11 +30,11 @@ The format of the function is as follows:
   </Tab>
 
   <Tab title="Golang">
-    ```
+    ```go
     GetRedirectorRulesFunction func(message C2GetRedirectorRuleMessage) C2GetRedirectorRuleMessageResponse
     ```
 
-    ```
+    ```go
     package c2structs
 
     // C2_REDIRECTOR_RULES STRUCTS

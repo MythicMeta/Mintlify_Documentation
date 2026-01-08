@@ -97,7 +97,6 @@
                       "message-flow/operator-submits-tasking"
                     ]
                   },
-                  "database-schema",
                   {
                     "group": "Reporting",
                     "pages": [
@@ -162,7 +161,8 @@
                 "group": "Overview",
                 "pages": [
                   "scripting/home",
-                  "scripting/hasura"
+                  "scripting/hasura",
+                  "scripting/database-schema"
                 ]
               },
               {
@@ -266,20 +266,33 @@
                   {
                     "group": "2. C2 Development",
                     "pages": [
-                      "customizing/c2-related-development",
                       {
-                        "group": "Docker & Server Config",
+                        "group": "2.1 Getting Started",
                         "pages": [
-                          "customizing/c2-related-development/server-side-coding",
-                          "customizing/c2-related-development/server-side-coding/c2-docker-containers",
-                          "customizing/c2-related-development/server-side-coding/c2-configuration-files",
-                          "customizing/c2-related-development/server-side-coding/opsec-checks-for-c2-profiles",
-                          "customizing/c2-related-development/server-side-coding/configuration-checks",
-                          "customizing/c2-related-development/server-side-coding/5.-sample-message",
-                          "customizing/c2-related-development/server-side-coding/6.-file-hosting",
-                          "customizing/c2-related-development/server-side-coding/redirect-rules",
-                          "customizing/c2-related-development/server-side-coding/8.-get-ioc",
-                          "customizing/c2-related-development/server-side-coding/9.-push-c2"
+                          "customizing/c2-related-development/mythic-definition/2.1.1-c2-class-definition",
+                          "customizing/c2-related-development/mythic-definition/2.1.2-c2-parameters",
+                          "customizing/c2-related-development/mythic-definition/2.1.3-c2-running",
+                          "customizing/c2-related-development/mythic-definition/2.1.4-c2-server-code"
+                        ]
+                      },
+                        {
+                          "group": "2.2 Advanced Features",
+                          "pages": [
+                            "customizing/c2-related-development/server-side-coding/2.2.1-c2-configuration-files",
+                            "customizing/c2-related-development/server-side-coding/2.2.2-opsec-checks-for-c2-profiles",
+                            "customizing/c2-related-development/server-side-coding/2.2.3-configuration-checks",
+                            "customizing/c2-related-development/server-side-coding/2.2.4-sample-message",
+                            "customizing/c2-related-development/server-side-coding/2.2.5-file-hosting",
+                            "customizing/c2-related-development/server-side-coding/2.2.6-redirect-rules",
+                            "customizing/c2-related-development/server-side-coding/2.2.7-get-ioc",
+                            "customizing/c2-related-development/server-side-coding/2.2.8-push-c2",
+                            "customizing/c2-related-development/server-side-coding/2.2.9-custom-rpc"
+                          ]
+                        },
+                      {
+                        "group": "2.3 Docker",
+                        "pages": [
+                          "customizing/c2-related-development/server-side-coding/2.3.1-c2-docker-containers"
                         ]
                       }
                     ]

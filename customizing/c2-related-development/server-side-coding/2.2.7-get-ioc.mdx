@@ -1,5 +1,5 @@
 ---
-title: "8. Get IOC"
+title: "7. Get IOC"
 ---
 
 ## What is it?
@@ -14,7 +14,7 @@ The dropdown actions button for any payload will have an option to generate IOCs
 
 <Tabs>
   <Tab title="Python">
-    ```
+    ```python
     async def get_ioc(self, inputMsg: C2GetIOCMessage) -> C2GetIOCMessageResponse:
         """Generate IOCs for the network traffic associated with the specified c2 configuration
 
@@ -28,12 +28,11 @@ The dropdown actions button for any payload will have an option to generate IOCs
   </Tab>
 
   <Tab title="Golang">
-    ```
+    ```go
     GetIOCFunction             func(message C2GetIOCMessage) C2GetIOCMessageResponse
     ```
 
-    ```
-
+    ```go
     package c2structs
 
     // C2_GET_IOC STRUCTS

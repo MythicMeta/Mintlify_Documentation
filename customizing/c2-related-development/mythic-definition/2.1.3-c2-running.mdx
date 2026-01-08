@@ -1,0 +1,130 @@
+---
+title: "3. Running"
+---
+
+## Step 1.5 Running
+
+You've defined some stuff, now let's do something with it **(without Docker)**.
+
+On your dev system where you're making this code, let's run it. We'll need a few things first though.
+First off, we just need to run (or compile) our definition.
+In Python, this just means importing the new class and calling `mythic_container.mythic_service.start_and_run_forever()`.
+For Go, it means calling that `Initialize` function and `MythicContainer.StartAndRunForever` with the `MythicContainer.MythicServiceC2` service specified.
+
+<CodeGroup dropdown>
+
+```python main.py
+import mythic_container
+from myc2 import *
+
+mythic_container.mythic_service.start_and_run_forever()
+
+# Run this with: python3 main.py
+# this assumes that `myc2.py` is in the same folder with a __init__.py folder so you can import from that file
+```
+
+```go main.go
+package main
+
+import (
+	httpfunctions "MyContainer/dns/c2functions" // import your functions, wherever they happen to live
+	"github.com/MythicMeta/MythicContainer"
+)
+
+func main() {
+	// load up the agent functions directory so all the init() functions execute
+	httpfunctions.Initialize()
+	// sync over definitions and listen
+	MythicContainer.StartAndRunForever([]MythicContainer.MythicServices{
+		MythicContainer.MythicServiceC2,
+	})
+}
+```
+</CodeGroup>
+
+There's one last thing we need to do before we can run this - indicate how this code will actually connect to Mythic.
+This code needs to connect up to Mythic via RabbitMQ to sync this data over and get tasking.
+
+<CodeGroup>
+
+```makefile Python
+BINARY_NAME?=main
+DEBUG_LEVEL?="debug"
+RABBITMQ_HOST?="127.0.0.1"
+RABBITMQ_PASSWORD?="PqR9XJ957sfHqcxj6FsBMj4p"
+MYTHIC_SERVER_HOST?="127.0.0.1"
+MYTHIC_SERVER_GRPC_PORT?="17444"
+WEBHOOK_DEFAULT_URL?=
+WEBHOOK_DEFAULT_CHANNEL?=
+WEBHOOK_DEFAULT_FEEDBACK_CHANNEL?=
+WEBHOOK_DEFAULT_CALLBACK_CHANNEL?=
+WEBHOOK_DEFAULT_STARTUP_CHANNEL?=
+MYTHIC_ADDRESS=http://${MYTHIC_SERVER_HOST}:${MYTHIC_SERVER_PORT}/agent_message
+MYTHIC_WEBSOCKET=ws://${MYTHIC_SERVER_HOST}:${MYTHIC_SERVER_PORT}/ws/agent_message
+
+run_custom:
+	DEBUG_LEVEL=${DEBUG_LEVEL} \
+RABBITMQ_HOST=${RABBITMQ_HOST} \
+RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD} \
+MYTHIC_SERVER_HOST=${MYTHIC_SERVER_HOST} \
+MYTHIC_SERVER_GRPC_PORT=${MYTHIC_SERVER_GRPC_PORT} \
+WEBHOOK_DEFAULT_URL=${WEBHOOK_DEFAULT_URL} \
+WEBHOOK_DEFAULT_CHANNEL=${WEBHOOK_DEFAULT_CHANNEL} \
+WEBHOOK_DEFAULT_FEEDBACK_CHANNEL=${WEBHOOK_DEFAULT_FEEDBACK_CHANNEL} \
+WEBHOOK_DEFAULT_CALLBACK_CHANNEL=${WEBHOOK_DEFAULT_CALLBACK_CHANNEL} \
+WEBHOOK_DEFAULT_STARTUP_CHANNEL=${WEBHOOK_DEFAULT_STARTUP_CHANNEL} \
+MYTHIC_ADDRESS=${MYTHIC_ADDRESS} \
+MYTHIC_WEBSOCKET=${MYTHIC_WEBSOCKET} \
+python3 main.py
+```
+
+```makefile Go
+BINARY_NAME?=main
+DEBUG_LEVEL?="debug"
+RABBITMQ_HOST?="127.0.0.1"
+RABBITMQ_PASSWORD?="PqR9XJ957sfHqcxj6FsBMj4p"
+MYTHIC_SERVER_HOST?="127.0.0.1"
+MYTHIC_SERVER_GRPC_PORT?="17444"
+WEBHOOK_DEFAULT_URL?=
+WEBHOOK_DEFAULT_CHANNEL?=
+WEBHOOK_DEFAULT_FEEDBACK_CHANNEL?=
+WEBHOOK_DEFAULT_CALLBACK_CHANNEL?=
+WEBHOOK_DEFAULT_STARTUP_CHANNEL?=
+MYTHIC_ADDRESS=http://${MYTHIC_SERVER_HOST}:${MYTHIC_SERVER_PORT}/agent_message
+MYTHIC_WEBSOCKET=ws://${MYTHIC_SERVER_HOST}:${MYTHIC_SERVER_PORT}/ws/agent_message
+
+local:
+	CGO_ENABLED=0 go build -o ${BINARY_NAME} .
+
+run_custom: local
+	DEBUG_LEVEL=${DEBUG_LEVEL} \
+RABBITMQ_HOST=${RABBITMQ_HOST} \
+RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD} \
+MYTHIC_SERVER_HOST=${MYTHIC_SERVER_HOST} \
+MYTHIC_SERVER_GRPC_PORT=${MYTHIC_SERVER_GRPC_PORT} \
+WEBHOOK_DEFAULT_URL=${WEBHOOK_DEFAULT_URL} \
+WEBHOOK_DEFAULT_CHANNEL=${WEBHOOK_DEFAULT_CHANNEL} \
+WEBHOOK_DEFAULT_FEEDBACK_CHANNEL=${WEBHOOK_DEFAULT_FEEDBACK_CHANNEL} \
+WEBHOOK_DEFAULT_CALLBACK_CHANNEL=${WEBHOOK_DEFAULT_CALLBACK_CHANNEL} \
+WEBHOOK_DEFAULT_STARTUP_CHANNEL=${WEBHOOK_DEFAULT_STARTUP_CHANNEL} \
+MYTHIC_ADDRESS=${MYTHIC_ADDRESS} \
+MYTHIC_WEBSOCKET=${MYTHIC_WEBSOCKET} \
+./${BINARY_NAME}
+```
+</CodeGroup>
+
+<Note>
+For Python, instead of doing a Makefile and providing all of the parameters via environment variables, you can create a `rabbitmq_config.json` file in the same directory as your `main.py`.
+This file will be automatically ingested when the `main.py` file starts. You can provide the same options here, like a `rabbitmq_password` field and a `rabbitmq_host` field with the right data filled in.
+</Note>
+
+At this point, you should see your `MyC2` appear in the Mythic UI under the `InstalledServices` -> `C2` tab.
+<Frame>
+    <img src="/images/version-3.3/c2-related-development-installed.png"/>
+</Frame>
+
+<Info>
+You'll notice that there might be a warning about being unable to start the internal server for the profile and that it's not listening for connections.
+Don't worry, that's expected! After all, you don't have any actual server code yet, just the Mythic definition.
+</Info>
+

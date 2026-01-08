@@ -1,0 +1,32 @@
+---
+title: "4. Server Code"
+---
+
+## Step 2 - The Server Code
+
+The C2 Profile doesn't need to know anything about the actual content of the messages that are coming from agents and in most cases wouldn't be able to read them anyway since they'll be encrypted.
+Depending on the kind of communications you're planning on doing, your C2 Profile might wrap or break up an agent's message (eg: splitting a message to go across DNS and getting it reassembled), but then once your C2 Profile re-assembles the agent message, it can just forward it along.
+In most cases, simply sending the agent message as an HTTP POST message to the location specified by `MYTHIC_ADDRESS`.
+You'll get an immediate result back from that which your C2 profile should hand back to the agent.
+
+<Note>
+Your server code **MUST** send an HTTP header of `Mythic: ProfileNameHere` when forwarding your messages to `MYTHIC_ADDRESS`.
+This allows Mythic to know *which* profile is connecting.
+</Note>
+
+Mythic will try to automatically start your server file when the Mythic definition file syncs over.
+This same file is what gets executed when you click to "start" the profile in the UI.
+
+<Info>
+The C2 Profile has nothing to do with the **content** of the messages that are being sent. It has no influence on the encryption or what format the agent messages are in (JSON, binary, stego, etc).
+If you want to control that level of granularity, you need to check out the [10. Translation Containers](/customizing/payload-type-development/translation-containers).
+</Info>
+
+<Info>
+When forwarding messages to Mythic, they must be in a specific format: Base64(UUID + message).
+This just allows Mythic to have a standard way to process messages that are coming in and pull out the needed pieces of information.
+The UUID allows mythic to look up the associated Payload Type and see what needs to happen (is it a payload that's staging, is it a callback, does processing need to go to a translation container first, etc).
+The `message` is typically an encrypted blob, but could be anything.
+</Info>
+
+Your server code can be whatever you want it to be. You can write it in any language you want.

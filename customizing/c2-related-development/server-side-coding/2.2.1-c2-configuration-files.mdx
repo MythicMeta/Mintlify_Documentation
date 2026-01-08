@@ -1,0 +1,28 @@
+---
+title: "1. Configuration Files"
+---
+
+## Config.json
+
+Every C2 Profile should have a `config.json` file located in their defined `server_folder_path` which contains all the fields an operator would need to configure.
+
+This is the main way for an operator to do configurations of the C2 profile without having to connect to the server where Mythic is running.
+This can be any format in reality, the name just has to stay the same.
+
+## Duplicated data
+
+What if you need some piece of data as part of both this config.json for the server _and_ for the payload?
+Making an operator supply it for the payload _and_ supplying it here manually isn't great.
+
+Instead, your [config check](/customizing/c2-related-development/server-side-coding/2.2.3-configuration-checks) function is called with a payload's configuration in two scenarios:
+1. an operator is creating a payload
+2. an operator is manually trying to check their configuration
+
+In both cases, you're getting execution in that config check function with the payload's configuration.
+So, the easiest thing to do is to take the config here and update your config.json with that data as needed.
+
+In the `httpx` profile, there's actually a _separate_ file where we're aggregating these sort of agent-side config values that are needed.
+
+You can also indicate as part of your response that you want Mythic to stop your C2 server code and restart it, that way your changes to the config.json (or other files) can be properly loaded.
+
+

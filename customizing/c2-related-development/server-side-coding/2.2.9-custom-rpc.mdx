@@ -1,0 +1,23 @@
+---
+title: "9. Custom RPC"
+---
+
+## What is it?
+
+C2 Profiles have access to MythicRPC just like Payload Types, but naturally they're not going to have a `TaskID`. So, the functions you can use will be limited, but there's still a bunch you can leverage.
+
+### Payload Type Docker -> C2 Docker
+
+This one is a little less intuitive than the C2 Docker container directly reaching out to the Mythic server for functionality. This functionality allows tasking as an operator to directly manipulate a C2 component. This functionality has no "default" functions, it's all based on the C2 profile itself. Technically, this goes both ways - C2 Profiles can reach back and execute functionality from Payload Types as well.
+
+Payload Types and C2 Profiles can specify an attribute, `custom_rpc_functions`, which are dictionaries of `key`-`value` pairs (much like the completion functions) where the `key` is the name of the function that a remote services can call, and the `value` is the actual function itself. These functions have the following format:
+
+```python
+async def func_name(incomingMsg: PayloadBuilder.PTOtherServiceRPCMessage) -> PayloadBuilder.PTOtherServiceRPCMessageResponse:
+    response = PayloadBuilder.PTOtherServiceRPCMessageResponse(
+        Success=True,
+        Result={"some dictionary": "with some values", **incomingMsg.ServiceRPCFunctionArguments}
+    )
+```
+
+The incoming data is a dictionary in the `incomingMsg.ServiceRPCFunctionArguments` and the resulting data goes back through the `Result` key.
