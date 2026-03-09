@@ -8,17 +8,15 @@ Browser scripting is a way for you, the agent developer or the operator, to dyna
 
 ## Where are Browser Scripts?
 
-As a developer, your browser scripts live in a folder called `browser_scripts` in your `mythic` folder. These are simply JavaScript files that you then reference from within your command files such as:
+As a developer, your browser scripts often live in a folder called `browser_scripts` in your `mythic` folder. These are simply JavaScript files that you then reference from within your command files such as the following.
 
+```Python
+browser_script = BrowserScript(script_name="download_new", author="@its_a_feature_")
 ```
-browser_script = BrowserScript(script_name="download_new", author="@its_a_feature_", for_new_ui=True)
-```
 
-As an operator, they exist in the web interface under "Operations" -> "Browser Scripts". You can enable and disable these for yourself at any time, and you can even modify or create new ones from the web interface as well. If you want these changes to be persistent or available for a new Mythic instance, you need to save it off to disk and reference it via the above method.
+As an operator, they exist in the web interface under "Extra Shortcuts" -> "Browser Scripts". You can enable and disable these for yourself at any time, and you can even modify or create new ones from the web interface as well.
+If you want these changes to be persistent or available for a new Mythic instance, you need to save it off to disk and reference it via the above method.
 
-<Info>
-You need to supply `for_new_ui=True` in order for the script to be leveraged for the new user interface. If you don't do this, Mythic will attach the script to the old user interface. All of the following documentation is for the new user interface.
-</Info>
 
 ## What can I do via Browser Scripts?
 
@@ -28,7 +26,7 @@ Browser Scripts are JavaScript files that take in a reference to the task and an
 
 The most basic thing you can do is return plaintext for Mythic to display for you. Let's take an example that simply aggregates all of the response data and asks Mythic to display it:
 
-```
+```JavaScript
 function(task, responses){
     const combined = responses.reduce( (prev, cur) => {
             return prev + cur;
@@ -49,7 +47,7 @@ Plaintext is also used when you don't have a browserscript set for a command in 
 
 A slightly more complex example is to render a button for Mythic to display a screenshot.
 
-```
+```JavaScript
 function(task, responses){
     if(task.status.toLowercase().includes("error")){
         const combined = responses.reduce( (prev, cur) => {
@@ -104,7 +102,7 @@ When downloading files from a target computer, the agent will go through a serie
 
 With this script, you're able to specify some plaintext along with a button that links to the file you just downloaded. However, remember that browser scripts run in the browser and are based on the data that's sent to the user to view. So, if the agent doesn't send back the new `agent_file_id` for the file, then you won't be able to link to it in the UI. Let's take an example and look at what this means:
 
-```
+```JavaScript
 function(task, responses){
     if(task.status.includes("error")){
         const combined = responses.reduce( (prev, cur) => {
@@ -160,7 +158,7 @@ So, from above we can see a few things going on:
 
   * `name` is the text inside the button
 
-  * `plaintext` is any leading text data you want to dispaly to the user instead of just a single download button
+  * `plaintext` is any leading text data you want to display to the user instead of just a single download button
 
 So, let's look at what the agent actually sent for this message as well as what this looks like visually:
 <Frame>
@@ -178,7 +176,7 @@ And here you can see that we have our plaintext leading up to our button. You'll
 
 Sometimes you'll want to link back to the "search" page (tasks, files, screenshots, tokens, credentials, etc) with specific pieces of information so that the user can see a list of information more cleanly. For example, maybe you run a command that generated a lot of credentials (like mimikatz) and rather than registering them all with Mythic *and* displaying them in the task output, you'd rather register them with Mythic and then link the user over to them. Thats where the search links come into play. They're formatted very similar to the download button, but with a slight tweak.
 
-```
+```JavaScript
 function(task, responses){
     if(task.status.includes("error")){
         const combined = responses.reduce( (prev, cur) => {
@@ -245,7 +243,7 @@ Let's take an example and then work through it - we're going to render the follo
     <img src="/images/version-3.3/image-1-59.png"/>
 </Frame>
 
-```
+```JavaScript
 function(task, responses){
     if(task.status.includes("error")){
         const combined = responses.reduce( (prev, cur) => {
@@ -290,7 +288,7 @@ function(task, responses){
                 "plaintext": data["name"],
                 "copyIcon": true,
                 "startIcon": data["is_file"] ? "file":"openFolder",
-                "startIconHoverText": data["name",
+                "startIconHoverText": data["name"],
                 "startIconColor": "gold",
                 },
             "size": {"plaintext": data["size"]},
@@ -391,7 +389,7 @@ function(task, responses){
 
 This looks like a lot, but it's nothing crazy - there's just a bunch of error handling and dealing with parsing errors or task errors. Let's break this down into a few easier to digest pieces:
 
-```
+```JavaScript
 return {"table":[{
             "headers": headers,
             "rows": rows,
@@ -401,7 +399,7 @@ return {"table":[{
 
 In the end, we're returning a dictionary with the key `table` which has an array of Dictionaries. This means that you can have multiple tables if you want. For each one, we need three things: information about headers, the rows, and the title of the table itself. Not too bad right? Let's dive into the headers:
 
-```
+```JavaScript
 let headers =[
             {"plaintext": "name", "type": "string", "fillWidth": true},
             {"plaintext": "size", "type": "size", "width": 200,},
@@ -419,14 +417,14 @@ Headers is an array of Dictionaries with three values each - `plaintext`, `type`
 
 Now let's look at the actual rows to display:
 
-```
+```JavaScript
         let rows = [{
             "rowStyle": data["is_file"] ? file : folder,
             "name": {
                 "plaintext": data["name"],
                 "copyIcon": true,
                 "startIcon": data["is_file"] ? "file":"openFolder",
-                "startIconHoverText": data["name",
+                "startIconHoverText": data["name"],
                 "startIconColor": "gold",
             },
             "size": {"plaintext": data["size"]},
@@ -500,7 +498,7 @@ In addition to just specifying the `plaintext` value that is going to be display
 
 The first kind of button we can do is just a popup to display additional information that doesn't fit within the table. In this example, we're displaying all of Apple's extended attributes via an additional popup.
 
-```
+```JavaScript
 {
     "button":
     {
@@ -521,7 +519,7 @@ The button field takes a few values, but nothing crazy. `name` is the name of th
 
 If the data you want to display to the user isn't structured (not a dictionary, not an array), then you probably just want to display it as a string. This is pretty common if you have long file paths or other data you want to display but don't fit nicely in a table form.
 
-```
+```JavaScript
 {
     "button":
     {
@@ -540,7 +538,7 @@ Just like with the other button types, we can use `startIcon`, `startIconColor`,
 
 This button type allows you to issue additional tasking.
 
-```
+```JavaScript
 {
     "button":
     {
@@ -574,7 +572,7 @@ The last thing here is the `parameters`. If you provide parameters, then Mythic 
 
 Sometimes the data you want to display is an array rather than a dictionary or big string blob. In this case, you can use the `table` button type and provide all of the same data you did when creating this table to create a new table (yes, you can even have menu buttons on that table).
 
-```
+```JavaScript
 {
     "button":
     {
@@ -597,7 +595,7 @@ Sometimes the data you want to display is an array rather than a dictionary or b
 
 Tasking and extra data display button is nice and all, but if you have a lot of options, you don't want to have to waste all that valuable text space with buttons. To help with that, there's one more type of button we can do: `menu`. With this we can wrap the other kinds of buttons:
 
-```
+```JavaScript
 "button": {
     "name": "Actions",
     "type": "menu",
@@ -644,7 +642,7 @@ These menu items also support the `startIcon` , `startIconColor` , and `hoverTex
 
 If you have certain kinds of media you'd like to display right inline with your tasking, you can do that. All you need is the `agent_file_id` (the UUID value you get back when registering a file with Mythic) and the `filename` of whatever media it is you're trying to show.
 
-```
+```JavaScript
 return { "media": [{
     "filename": `${task.display_params}`,
     "agent_file_id": data["file_id"],
@@ -704,3 +702,42 @@ Each edge has a few properties:
 * `color` - the color you want the edge to be
 
 * `buttons` - this is an array of button actions you'd like to add to the context menu of your edge.
+
+### Tabs
+
+Sometimes you have a lot of data you want to display in a lot of different ways, but trying to do it all in one scrollable area looks gross.
+An easy example of this might be that you have multiple tables you want to display.
+
+Fortunately, this is where `tabs` can come into play. You can create tabs by returning the following:
+
+```JavaScript
+return {
+    "tabs": [
+        {
+            "title": "name of the tab",
+            "content": {what you want to display}
+        }
+    ]
+}
+```
+
+For the `content` field, simply put there any of the above data types that you'd like to render. For example:
+
+```JavaScript
+return {
+    "tabs": [
+        {
+            "title": "table1",
+            "content": {
+                "table":[{"headers": headers, "rows": rows, "title": "File Listing Data" }]
+            }
+        },
+        {
+            "title": "something else",
+            "content": {
+                "plaintext": "raw text here"
+            }
+        }
+    ]
+}
+```
