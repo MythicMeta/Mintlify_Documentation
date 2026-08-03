@@ -1,0 +1,94 @@
+---
+title: "10. File Editor Protocol"
+description: "Implement Mythic's interactive, versioned remote text editor in an agent command"
+---
+
+Commands that advertise `task_response:file_editor` in the `supported_ui_features` use reserved interactive task message types to exchange editor requests and snapshots.
+
+| Message type | Value | Direction |
+| --- | ---: | --- |
+| `FileEditorRequest` | `100` | Mythic to agent |
+| `FileEditorResponse` | `101` | Agent to Mythic |
+| `FileEditorError` | `102` | Agent to Mythic |
+
+The surrounding interactive object is unchanged:
+
+```json
+{"action": "post_response",
+    "interactive": [
+        {
+          "task_id": "agent-task-uuid",
+          "data": "base64-encoded JSON document",
+          "message_type": 100
+        }
+    ]
+}
+```
+
+## Request document
+
+The decoded JSON data request always contains `action` and a unique `request_id`.
+
+```json
+{
+  "action": "save",
+  "request_id": "b2fbcc2c-bac9-4ee7-954f-d42c69ca279f",
+  "file_id": "Mythic staged-file UUID",
+  "expected_sha1": "last snapshot SHA-1",
+  "force_overwrite": false
+}
+```
+
+Supported actions:
+
+- `refresh`: read the current remote file and return a new snapshot;
+- `save`: fetch the staged `file_id`, compare `expected_sha1`, write the file, and return a new snapshot;
+- `close`: finish the editor session and complete the parent task.
+
+`force_overwrite` is omitted unless the operator explicitly chooses **Save anyway** after reviewing a conflict.
+
+## Successful snapshot
+
+Register the current file contents with Mythic and return its UUID. The UI fetches the tracked file using authenticated download handling and uses its metadata for filename, remote path, size, and SHA-1.
+
+```json
+{
+  "request_id": "b2fbcc2c-bac9-4ee7-954f-d42c69ca279f",
+  "file_id": "snapshot-file-uuid"
+}
+```
+
+Send this JSON as base64 `data` with message type `101`. Every successful refresh/save becomes a version-history entry.
+
+## Errors and conflicts
+
+Return message type `102` with an application error:
+
+```json
+{
+  "request_id": "b2fbcc2c-bac9-4ee7-954f-d42c69ca279f",
+  "code": "write_failed",
+  "message": "permission denied"
+}
+```
+
+If the remote file changed since the last snapshot, do not overwrite it. Return a conflict and the current hash:
+
+```json
+{
+  "request_id": "b2fbcc2c-bac9-4ee7-954f-d42c69ca279f",
+  "code": "conflict",
+  "message": "file changed after the editor snapshot",
+  "current_sha1": "current remote SHA-1",
+  "file_id": "optional reusable staged-file UUID"
+}
+```
+
+The UI lets the operator refresh, inspect the staged edit, or deliberately resend `save` with `force_overwrite: true`.
+
+## Limits and lifecycle
+
+- The UI accepts valid UTF-8 text up to 2,000,000 bytes.
+- Keep the parent task open while editing; follow-on requests use it as their parent.
+- After `close`, mark the parent task complete. History remains visible but read-only.
+- Correlate responses by `request_id`; multiple refresh/save operations may be in flight over an unreliable C2 path.

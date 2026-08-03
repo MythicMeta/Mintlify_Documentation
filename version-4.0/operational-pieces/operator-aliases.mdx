@@ -1,0 +1,73 @@
+---
+title: "Operator Aliases"
+description: "Reusable command and value expansions owned by each operator"
+---
+
+Operator aliases let you shorten frequently used tasking and chat commands without changing an agent.
+They are owned by the operator, can be enabled or disabled, and can be imported or exported from the operator settings page.
+
+## Alias types
+
+### Command aliases
+
+A command alias replaces the first command token and appends the supplied argument. If `triage` expands to `shell whoami && hostname`, then:
+
+```text
+triage /all
+```
+
+expands to:
+
+```text
+shell whoami && hostname /all
+```
+
+In AI chat, command aliases are invoked with `/name`. An alias can expand to another alias, but expansion stops after five levels and loops are rejected.
+
+### Generic aliases
+
+A generic alias replaces `@name` anywhere in a string or JSON string value. For example, defining `@dc` as `10.10.10.10` lets you task:
+
+```text
+portscan -host @dc -ports 80,443,445
+```
+
+References with a colon such as `@cred:12` are reserved task references, not generic aliases. Alias names must start with a letter and contain only lowercase letters, numbers, `_`, or `-`.
+
+## Scope and precedence
+
+Aliases can be global to the operator or scoped to one payload type or AI chat container.
+A matching scoped alias takes precedence over the global alias with the same name.
+
+| Scope | Used in |
+| --- | --- |
+| Global | All eligible tasking and chat contexts |
+| Callback payload type | Callbacks for that payload type |
+| AI chat container | Channels backed by that chat container |
+
+## Portable configuration
+
+Exported aliases use a versioned JSON format:
+
+```json
+{
+  "version": 1,
+  "aliases": [
+    {
+      "name": "triage",
+      "alias": "shell whoami",
+      "alias_type": "command",
+      "active": true,
+      "scope": {"type": "payload_type", "name": "apollo"}
+    },
+    {
+      "name": "dc",
+      "alias": "10.10.10.10",
+      "alias_type": "generic",
+      "active": true
+    }
+  ]
+}
+```
+
+Imports report duplicates, invalid names, and missing payload/chat scopes instead of silently discarding them.

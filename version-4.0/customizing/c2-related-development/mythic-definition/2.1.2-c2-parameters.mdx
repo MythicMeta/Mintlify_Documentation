@@ -1,0 +1,208 @@
+---
+title: "2. Parameters"
+---
+
+## Parameters
+
+The array of parameters shown here are the ones that are presented to the operator when building their payload.
+These should be things that the Payload will need in order to successfully talk through your C2 Profile.
+
+<Info>
+What if your Server and Payload need some shared piece of data? There's a ConfigCheck function that's called that you can define here that will provide the full payload configuration.
+You can take this config and update something on your server-side configuration to keep parity between the two.
+</Info>
+
+<CodeGroup dropdown>
+
+```python parameters example
+parameters = [
+    C2ProfileParameter(
+        name="callback_host",
+        description="Callback Host",
+        default_value="ws://127.0.0.1",
+        verifier_regex="^(ws|wss)://[a-zA-Z0-9]+",
+        required=True
+    ),
+    C2ProfileParameter(
+        name="AESPSK",
+        description="Crypto type",
+        default_value="aes256_hmac",
+        parameter_type=ParameterType.ChooseOne,
+        choices=["aes256_hmac", "none"],
+        required=False,
+        crypto_type=True
+    ),
+    C2ProfileParameter(
+        name="callback_interval",
+        description="Callback Interval in seconds",
+        default_value="10",
+        verifier_regex="^[0-9]+$",
+        required=False,
+    ),
+    C2ProfileParameter(
+        name="encrypted_exchange_check",
+        description="Perform Key Exchange",
+        parameter_type=ParameterType.Boolean,
+        default_value=True,
+        required=False,
+    ),
+    C2ProfileParameter(
+        name="killdate",
+        description="Killdate for when the C2 Profile should stop working and exit the agent",
+        default_value=365,
+        parameter_type=ParameterType.Date,
+    ),
+]
+```
+
+```go parameters example
+var dnsc2parameters = []c2structs.C2Parameter{
+    {
+        Name:          "domains",
+        Description:   "Series of domains to use",
+        DefaultValue:  []string{"domain.com"},
+        ParameterType: c2structs.C2_PARAMETER_TYPE_ARRAY,
+        Required:      true,
+    },
+    {
+        Name:          "killdate",
+        Description:   "Kill Date",
+        DefaultValue:  365,
+        ParameterType: c2structs.C2_PARAMETER_TYPE_DATE,
+        Required:      false,
+    },
+    {
+        Name:          "encrypted_exchange_check",
+        Description:   "Perform Key Exchange",
+        DefaultValue:  true,
+        ParameterType: c2structs.C2_PARAMETER_TYPE_BOOLEAN,
+        Required:      false,
+    },
+    {
+        Name:          "callback_jitter",
+        Description:   "Callback Jitter in percent",
+        DefaultValue:  23,
+        ParameterType: c2structs.C2_PARAMETER_TYPE_NUMBER,
+        Required:      false,
+        VerifierRegex: "^[0-9]+$",
+    },
+    {
+        Name:          "AESPSK",
+        Description:   "Encryption Type",
+        DefaultValue:  "aes256_hmac",
+        ParameterType: c2structs.C2_PARAMETER_TYPE_CHOOSE_ONE,
+        Required:      false,
+        IsCryptoType:  true,
+        Choices: []string{
+            "aes256_hmac",
+            "none",
+        },
+    },
+    {
+        Name:          "callback_interval",
+        Description:   "Callback Interval in seconds",
+        DefaultValue:  10,
+        ParameterType: c2structs.C2_PARAMETER_TYPE_NUMBER,
+        Required:      false,
+        VerifierRegex: "^[0-9]+$",
+    },
+    {
+        Name:          "domain_rotation",
+        Description:   "Domain rotation pattern. Fail-over uses each one in order until it can't communicate with it successfully and moves on. Round-robin makes each request to the next host in the list.",
+        ParameterType: c2structs.C2_PARAMETER_TYPE_CHOOSE_ONE,
+        Choices: []string{
+            "round-robin",
+            "random",
+            "fail-over",
+        },
+    },
+}
+func Initialize() {
+    c2structs.AllC2Data.Get("myc2").AddParameters(dnsc2parameters)
+}
+```
+</CodeGroup>
+
+### Parameter Components
+
+So what are all these components in the Parameter definitions?
+
+* `name` - What is the name of the parameter
+    * this is how you'll get the value for this parameter during build time
+* `description` - The long form description of what this value means
+* `default_value` - What is the default value for this parameter
+* `verifier_regex` - Optional feature you can use to provide a regex that indicates if a value is valid or not for the operator
+* `required` - Is this field required for the operator to fill out
+* `parameter_type` - What type of parameter is this:
+    * `String` - you get a `string` value
+    * `ChooseOne`` - you get a `string` value
+    * `ChooseOneCustom` - you get a `string` value
+    * `ChooseMultiple` - you get an `array` of `string` values
+    * `Array` - you get an `array` of `string` values
+    * `Date` - you get a string representation of the Date as YYYY-MM-DD
+    * `Dictionary` - you get a `dictionary` representation, or `map[string]string` in Go
+    * `Boolean` - you get a `bool` value
+    * `TypedArray` - you get an `array` of `tuples`
+        * this will either be something like `[ ["type", "value"], ["type", "value"] ]` if the UI modal was used
+        * this will be something like `[ ["", "user typed"], ["", "user typed"] ]` and sent to your typed_array_parse function in the case that the user just typed something and needs parsing into the above format
+    * `File` - you will get a `string` UUIDv4 value that you can use to upload/download via chunking
+    * `FileMultiple` - you will get an `array` of `string` UUIDv4 values that you can use to upload/download via chunking
+    * `Number` - you will get an `int` in Python and a `float64` in Go by default
+
+## Mythic 4.0 parameter fields
+
+C2 parameters now support the same display and conditional form capabilities as payload build parameters:
+
+```python
+from mythic_container.C2ProfileBase import (
+    C2ProfileParameter,
+    C2RPCDynamicQueryC2ParameterFunctionMessage,
+    C2RPCDynamicQueryC2ParameterFunctionMessageResponse,
+    ComplexChoice,
+    ParameterType,
+)
+
+async def query_domains(
+    msg: C2RPCDynamicQueryC2ParameterFunctionMessage,
+) -> C2RPCDynamicQueryC2ParameterFunctionMessageResponse:
+    region = msg.OtherParameters.get("region", "us-west")
+    return C2RPCDynamicQueryC2ParameterFunctionMessageResponse(
+        Success=True,
+        ComplexChoices=[
+            ComplexChoice(DisplayValue=f"Primary ({region})", Value="primary.example"),
+            ComplexChoice(DisplayValue=f"Backup ({region})", Value="backup.example"),
+        ],
+    )
+
+parameters = [
+    C2ProfileParameter(
+        name="region",
+        display_name="Hosting Region",
+        description="Region used to choose managed redirectors",
+        parameter_type=ParameterType.ChooseOne,
+        choices=["us-west", "us-east"],
+        choices_display_names={"us-west": "US West", "us-east": "US East"},
+        default_value="us-west",
+        ui_position=1,
+    ),
+    C2ProfileParameter(
+        name="callback_host",
+        display_name="Callback Host",
+        description="Select a host returned by the C2 service",
+        parameter_type=ParameterType.ChooseOne,
+        dynamic_query_function=query_domains,
+        ui_position=2,
+    ),
+]
+```
+
+`OtherParameters` contains the values currently selected for the other C2 parameters. Return `Choices` when the label equals the value, or `ComplexChoices` when operators should see a friendly label while the payload receives a different value.
+
+- `display_name` preserves a stable internal `name` while improving the form label.
+- `choices_display_names` supplies labels for static choice values.
+- `group_name` and `ui_position` organize the builder form.
+- `hide_conditions` accepts `eq`, `neq`, `in`, `nin`, `lt`, `gt`, `lte`, `gte`, `sw`, `ew`, `co`, and `nco`.
+- `dynamic_query_function` supplies service-backed choices.
+- `ParameterType.JSONString` plus `json_string_schema` provides a structured visual/source JSON editor.
+
+See [JSONString Parameters](/version-4.0/customizing/payload-type-development/payload-type-info/json-string-parameters) for the schema vocabulary and Python/Go constants.

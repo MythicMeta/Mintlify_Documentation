@@ -1,0 +1,47 @@
+---
+title: "Mythic 3.3->3.4 Updates"
+sidbarTitle: "Overview"
+---
+
+Updates and needed agent changes between versions
+
+## Breaking Changes
+
+None!
+
+## To Update
+
+Depending on your language, update the associated Mythic Container library:
+  * github.com/MythicMeta/MythicContainer@v1.5.0 for Golang
+  * mythic-container==0.6.0 for Python
+
+## Quality of Life
+
+* Tabs in the active callbacks page that you aren't currently looking at will get a green notification bubble if they have changes
+* All services (payload type, c2 profile, translation container, eventing, auth, webhooks, logging, etc) can how report back their own semver for easier version tracking
+* The payload building process in the UI had a complete overhaul!
+
+### Payload Types
+
+* Build Parameters are now dynamic and can be hidden depending on the selected OS or other build parameter values.
+* Build Parameters can now specify a "group name" to be grouped together logically in the UI.
+* A new field, C2 Parameter Deviations, allows Payload Types to "modify" supported C2 Profile parameters to more closely align with their implementations
+* Payload Type definitions can now implement their own "help" function so you don't have to use Mythic's built-in help
+    * you don't need to create a "command" for it, it's a new function that's available as part of your payload definition
+* Payload types can specify if they support multiple c2 selections in a payload or not (ex: http and tcp)
+* Payload types can specify if they support multiple instances of c2s in a payload or not (ex: 2 instances of httpx)
+
+### Eventing
+
+* New GUI Wizard button available on the main eventing page in the top left
+* Eventing step details auto hide stdout/stderr if they're empty
+* Some eventing triggers that allow you to limit by payload_type now also allow you to further limit by selected OS
+* you can now trigger eventing workflows from right clicking a callback in the active callbacks page
+
+### C2 Profiles
+
+* C2 profiles can now report their own agent icons (and dark mode agent icons) to be shown in the UI and in graphs!
+
+### Invite Links
+
+Invite Links are now associated with a database table, so they survive reboots!

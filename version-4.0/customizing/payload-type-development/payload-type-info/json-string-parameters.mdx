@@ -1,0 +1,114 @@
+---
+title: "JSONString Parameters"
+description: "Render guided JSON forms for payload build and C2 profile parameters"
+---
+
+Mythic 4.0 adds the `JSONString` parameter type for payload build parameters and C2 profile parameters. The stored value remains a JSON **string**, while `json_string_schema` lets the Create Payload UI offer synchronized **Visual** and **Source** editors.
+
+<Info>
+The schema is declarative UI metadata, not JSON Schema draft-07/2020-12. Use the supported vocabulary below.
+</Info>
+
+## Python example
+
+```python
+from mythic_container.PayloadBuilder import BuildParameter, BuildParameterType
+
+http_config_schema = {
+    "type": "object",
+    "label": "HTTP Configuration",
+    "fields": [
+        {"name": "callback_host", "type": "string", "label": "Callback Host"},
+        {"name": "callback_port", "type": "number", "label": "Port"},
+        {"name": "use_ssl", "type": "boolean", "label": "Use TLS"},
+        {
+            "name": "method",
+            "type": "enum",
+            "label": "HTTP Method",
+            "choices": ["GET", "POST"],
+            "choices_display_names": {"GET": "HTTP GET", "POST": "HTTP POST"},
+        },
+        {
+            "name": "headers",
+            "type": "string_map",
+            "label": "Headers",
+            "key_label": "Header",
+            "value_label": "Value",
+        },
+        {
+            "name": "client_certificate",
+            "type": "string",
+            "label": "Client certificate",
+            "show_when": {"field": "use_ssl", "in": [True]},
+        },
+    ],
+}
+
+build_parameters = [
+    BuildParameter(
+        name="http_config",
+        display_name="HTTP Configuration",
+        parameter_type=BuildParameterType.JSONString,
+        default_value='{"callback_host":"https://example.com","callback_port":443,"use_ssl":true,"method":"POST","headers":{}}',
+        json_string_schema=http_config_schema,
+    )
+]
+```
+
+The same schema can be supplied to `C2ProfileParameter(..., parameter_type=ParameterType.JSONString, json_string_schema=http_config_schema)`.
+
+## Go example
+
+```go
+configSchema := map[string]interface{}{
+    "type":  "object",
+    "label": "HTTP Configuration",
+    "fields": []map[string]interface{}{
+        {"name": "callback_host", "type": "string", "label": "Callback Host"},
+        {"name": "callback_port", "type": "number", "label": "Port"},
+        {"name": "use_ssl", "type": "boolean", "label": "Use TLS"},
+        {
+            "name": "headers",
+            "type": "string_map",
+            "label": "Headers",
+            "key_label": "Header",
+            "value_label": "Value",
+        },
+    },
+}
+
+parameter := agentstructs.BuildParameter{
+    Name:             "http_config",
+    DisplayName:      "HTTP Configuration",
+    ParameterType:    agentstructs.BUILD_PARAMETER_TYPE_JSON_STRING,
+    DefaultValue:     `{"callback_host":"https://example.com","callback_port":443,"use_ssl":true,"headers":{}}`,
+    JsonStringSchema: configSchema,
+}
+```
+
+For a C2 profile, use `c2structs.C2_PARAMETER_TYPE_JSON_STRING` and the `JsonStringSchema` field.
+
+## Schema vocabulary
+
+| `type` | Stored JSON value | Important fields |
+| --- | --- | --- |
+| `object` | object | `fields`, where each field has a unique `name` |
+| `array` | array | `items` schema |
+| `enum` | one primitive value | `choices`, optional `choices_display_names` |
+| `string` | string | optional `placeholder` |
+| `number` | number | — |
+| `boolean` | boolean | — |
+| `string_map` | object of string keys/values | optional `key_label`, `value_label` |
+
+All nodes can include `label` and `description`. A field inside an object's `fields` can include:
+
+- `show_when: {field: "sibling_name", in: [values...]}` to control visibility;
+- `placeholder_when: {field: "sibling_name", map: {value: "placeholder"}}` for a contextual string placeholder.
+
+Hidden fields keep their current value. Consumers should tolerate a value that is present even when its editor control is hidden.
+
+## Round-trip behavior
+
+The Source editor holds the exact string. Switching to Visual calls `JSON.parse`; invalid JSON blocks the switch. Each visual change is serialized back with formatted JSON. The top-level schema should therefore describe the JSON document itself, normally an `object`.
+
+The UI seeds missing values as `{}` for objects and maps, `[]` for arrays, `""` for strings, `0` for numbers, `false` for booleans, and the first enum choice when available.

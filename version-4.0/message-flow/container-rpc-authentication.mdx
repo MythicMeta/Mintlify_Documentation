@@ -1,0 +1,41 @@
+---
+title: "Authenticated Container RPC"
+description: "How v4 identity and scopes follow RabbitMQ work across containers"
+---
+
+Mythic 4.0 carries authenticated context across container RPC.
+This prevents a request from gaining authority merely because it moved from HTTP/GraphQL to RabbitMQ.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API as Mythic API
+    participant Auth as Auth and scope checks
+    participant MQ as RabbitMQ
+    participant Container
+    Client->>API: Bearer access/API token
+    API->>Auth: Validate identity, operation, token scopes
+    Auth-->>API: Signed request context
+    API->>MQ: Publish request plus auth-context header
+    MQ->>Container: Deliver scoped work
+    Container->>Container: Library binds context to handler
+    Container->>MQ: Publish RPC response with context
+    MQ->>API: Correlated response
+    API->>Auth: Enforce destination scope
+    API-->>Client: Result
+```
+
+The context represents the initiating operator or bot, current operation, API-token/event-step attribution, and effective scopes.
+Compatible Mythic container libraries propagate it automatically through built-in RPC helpers.
+
+## Developer requirements
+
+- Upgrade all container libraries before connecting them to v4.
+- Pass the handler context to container-library RPC helpers instead of creating a detached background context.
+- Preserve the Mythic auth-context RabbitMQ header in custom forwarding code.
+- Choose `custom_rpc_timeout` for legitimate long-running custom RPC work instead of retrying the same non-idempotent request.
+
+<Warning>
+A missing or invalid context is an authentication failure, not a transient RabbitMQ failure.
+Blind retries can duplicate work and will not add the missing authority.
+</Warning>

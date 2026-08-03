@@ -1,0 +1,144 @@
+---
+title: "5. Browser Scripting"
+description: "Render payload command responses with Mythic 4.0 browser scripts."
+---
+
+Browser scripts are JavaScript response renderers. A payload type can register a default renderer with a command, and each operator can enable, disable, or customize their own copy in Mythic.
+
+```python
+browser_script = BrowserScript(script_name="process_list", author="@operator")
+```
+
+Store the referenced JavaScript in the payload type's `browser_scripts` directory. An operator-created script is useful for experimentation, but register the final script with the payload type if it should survive a new database and be distributed to other operators.
+
+## Function contract
+
+Mythic calls the script with the current task object and an array of response strings. Return an object containing one or more supported top-level keys.
+
+```javascript
+function(task, responses) {
+  if (task.status.toLowerCase().includes("error")) {
+    return { plaintext: responses.join("") };
+  }
+
+  const parsed = responses.flatMap((response) => {
+    try {
+      const value = JSON.parse(response);
+      return Array.isArray(value) ? value : [value];
+    } catch (error) {
+      return [];
+    }
+  });
+
+  return {
+    plaintext: `${parsed.length} process records`,
+    table: [{
+      title: "Processes",
+      headers: [
+        { plaintext: "name", type: "string", fillWidth: true },
+        { plaintext: "pid", type: "number", width: 120 },
+        { plaintext: "user", type: "string", width: 220 }
+      ],
+      rows: parsed.map((item) => ({
+        name: { plaintext: item.name },
+        pid: { plaintext: item.pid },
+        user: { plaintext: item.user }
+      }))
+    }]
+  };
+}
+```
+
+Run error handling before parsing structured output. Responses can arrive incrementally, so the function must also tolerate a partially completed task and incomplete application-level data.
+
+## Supported output
+
+| Key | Shape | Purpose |
+| --- | --- | --- |
+| `plaintext` | string | Render text with plaintext, JSON, Markdown, and terminal view options. |
+| `table` | array of tables | Render sortable/filterable structured rows and tasking controls. |
+| `media` | array of media objects | Preview and download Mythic file records through authenticated requests. |
+| `graph` | graph object | Render nodes and edges for relationship output. |
+| `tabs` | array of tab objects | Organize any supported output recursively into named tabs. |
+
+The keys can be combined in one result. Unknown keys are ignored.
+
+### Plaintext
+
+```javascript
+return { plaintext: responses.join("") };
+```
+
+The operator can switch plain output among raw text, formatted JSON, Markdown, and xterm-based terminal rendering. A browser script does not need to implement ANSI or Markdown rendering itself.
+
+### Tables
+
+Each table has a `title`, `headers`, and `rows`. A header's `plaintext` is also the key used to find its cell in each row.
+
+```javascript
+return {
+  table: [{
+    title: "Network Connections",
+    headers: [
+      { plaintext: "remote", type: "string", fillWidth: true },
+      { plaintext: "port", type: "number", width: 100 },
+      { plaintext: "state", type: "string", width: 140 }
+    ],
+    rows: connections.map((connection) => ({
+      remote: { plaintext: connection.remote },
+      port: { plaintext: connection.port },
+      state: { plaintext: connection.state }
+    }))
+  }]
+};
+```
+
+Table cells support plaintext plus the current copy, tasking-button, style, and value formats exposed by the UI. Keep raw agent values in the row so sorting and filtering remain useful.
+
+### Media
+
+Use `media` for downloaded files, screenshots, text, hex, and SQLite previews. Mythic looks up the file record by `agent_file_id` and adds Bearer authentication to preview and download requests.
+
+```javascript
+return {
+  media: [{
+    agent_file_id: result.file_id,
+    filename: result.filename,
+    editable: false
+  }]
+};
+```
+
+Set `editable: true` only for a workflow that intentionally permits changing the Mythic-side file record. The interactive remote [file-editor protocol](/version-4.0/customizing/payload-type-development/create_tasking/agent-side-coding/file-editor-protocol) is a separate task-response feature.
+
+### Tabs
+
+Each tab has a `title` and `content`. The content accepts the same keys as a top-level browser-script result.
+
+```javascript
+return {
+  tabs: [
+    { title: "Summary", content: { plaintext: summary } },
+    { title: "Records", content: { table: [recordsTable] } },
+    { title: "Artifact", content: { media: [{ agent_file_id: fileId }] } }
+  ]
+};
+```
+
+### Graphs
+
+Return `graph` when nodes and edges communicate the result more clearly than rows. Graph definitions can supply nodes directly or build them from browser-script elements and can include layout/view configuration. Validate graph output in the script editor's preview because invalid node or edge references cannot be rendered.
+
+## Tasking buttons
+
+Table cells can issue additional tasking. Pass the command, callback context, and parameter value required by the target action instead of constructing direct API requests in the browser script. Use supported UI features where possible so the same action remains available outside the custom renderer.
+
+## Removed v4 renderers
+
+<Warning>
+The legacy top-level `screenshot`, `download`, and `search` result keys were removed in Mythic 4.0.
+Convert screenshot/download output to `media`; convert search links to current table/tasking controls or ordinary supported output.
+Browser scripts that fetch protected routes must use the UI's authenticated mechanisms because the `mythic` cookie is no longer accepted.
+</Warning>
+
+Test each migrated script against completed, partially completed, error, empty, and multi-response tasks. The Browser Scripts editor can preview a script against matching task output from the current operation.

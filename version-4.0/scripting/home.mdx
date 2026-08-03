@@ -1,0 +1,36 @@
+---
+title: "Scripting and GraphQL"
+description: "Authenticate to Mythic 4.0 and automate it through GraphQL."
+---
+
+Mythic's UI and scripting clients use the same GraphQL queries, mutations, and subscriptions. GraphQL lets a caller request an exact result shape and subscribe to live operational updates without joining data from several REST endpoints.
+
+All GraphQL HTTP requests are sent to `/graphql`. Subscriptions use the corresponding WebSocket endpoint. Supported operations begin with `query`, `mutation`, or `subscription`.
+
+## Authentication
+
+Protected HTTP and GraphQL endpoints require a Bearer token:
+
+```http
+Authorization: Bearer mtk_REPLACE_WITH_TOKEN
+Content-Type: application/json
+```
+
+The value can be a current access token returned by `/auth` or an opaque, scoped [API token](/version-4.0/operational-pieces/api-tokens). The v3 `apitoken` header and cookie-only authentication are not accepted.
+
+```bash
+curl --insecure https://127.0.0.1:7443/graphql \
+  -H 'Authorization: Bearer mtk_REPLACE_WITH_TOKEN' \
+  -H 'Content-Type: application/json' \
+  --data '{"query":"query { whoami { status username current_operation_id scopes } }"}'
+```
+
+Use read-only resource scopes for monitors and reports, and add write scopes only for mutations the integration performs. Query `scopeCheck` during startup when a tool requires a known set of permissions.
+
+## Choosing an interface
+
+- Use the [Mythic Python package](/version-4.0/scripting/scripting) for common workflows and subscriptions.
+- Use the [Hasura console](/version-4.0/scripting/hasura) to explore the current schema and test queries.
+- Use direct GraphQL when another language already has a mature GraphQL client.
+
+The public schema is the source of truth for argument names. In v4, action names are camelCase and many actions accept operation-scoped `task_display_id` or `callback_display_id` rather than internal database IDs.

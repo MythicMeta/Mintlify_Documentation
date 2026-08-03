@@ -1,0 +1,17 @@
+---
+title: "Installed Service Documentation"
+description: "Serve documentation supplied by installed payload types and C2 profiles."
+---
+
+Mythic's internal documentation service is separate from this versioned framework.
+It renders the Markdown shipped by installed payload types and C2 profiles so operators can read service-specific commands, parameters, and setup instructions without leaving the deployment.
+
+## Access it
+
+Open **Help → Documentation** or browse to `/docs/` through Mythic's Nginx proxy. `DOCUMENTATION_PORT` in `Mythic/.env` controls the service's internal HTTP port; operators normally connect through Mythic's HTTPS port instead of exposing it directly.
+
+The service reads Markdown under `Mythic/documentation-docker/` and rebuilds during local development. Mythic 4.0's documentation UI adds light and dark themes, collapsible navigation, preserved sidebar state, and in-page navigation.
+
+<Note>
+Payload and C2 authors own the content displayed here. Update that content in the service repository or its installed documentation files; update the Mintlify repository for changes to the Mythic framework manual.
+</Note>

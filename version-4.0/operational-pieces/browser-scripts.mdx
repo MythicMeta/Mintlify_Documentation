@@ -1,0 +1,72 @@
+---
+title: "Browser Scripts"
+description: "Transform task responses into supported Mythic 4.0 output views."
+---
+
+Browser scripts are operator-side JavaScript functions that transform a task and its response strings into structured UI data.
+A script can render plaintext, tables, authenticated media, graphs, or nested tabs.
+
+Manage scripts under **Extra Shortcuts → Browser Scripts**.
+Payload types can supply defaults for their commands; operators can enable, disable, clone, and modify their own copies.
+Use **Toggle BrowserScript** on a task to switch between the transformed and raw response.
+
+## Function contract
+
+Every script exports a function with `task` and `responses` arguments and must return an object:
+
+```javascript
+function(task, responses) {
+  if (task.status.toLowerCase().includes("error")) {
+    return { plaintext: responses.join("") };
+  }
+
+  const rows = responses.map((response) => {
+    const item = JSON.parse(response);
+    return {
+      name: { plaintext: item.name },
+      pid: { plaintext: item.pid },
+      user: { plaintext: item.user }
+    };
+  });
+
+  return {
+    table: [{
+      title: "Processes",
+      headers: [
+        { plaintext: "name", type: "string", fillWidth: true },
+        { plaintext: "pid", type: "number", width: 120 },
+        { plaintext: "user", type: "string", width: 220 }
+      ],
+      rows
+    }]
+  };
+}
+```
+
+Top-level keys can be combined:
+
+| Key | Value |
+| --- | --- |
+| `plaintext` | A string rendered with plaintext, JSON, Markdown, and terminal view options. |
+| `table` | An array of table definitions with headers and rows. Cells can include text, tasking buttons, copy actions, and formatting. |
+| `media` | An array of objects containing an `agent_file_id`, optional `filename`, and optional `editable`. Mythic fetches previews and downloads with authenticated requests. |
+| `graph` | A graph definition for structured relationship output. |
+| `tabs` | An array of `{title, content}` objects; `content` uses the same supported keys recursively. |
+
+For example, display an operation file inline:
+
+```javascript
+return {
+  media: [{
+    agent_file_id: data.file_id,
+    filename: data.filename,
+    editable: false
+  }]
+};
+```
+
+<Warning>
+The legacy top-level `screenshot`, `download`, and `search` renderers were removed in v4. Return `media` for file previews/downloads, or use supported table cells and current routes. Custom fetches must add the current Bearer token; cookie-only media access no longer works.
+</Warning>
+
+Payload authors should register scripts from the payload type so new operators receive them. See [Payload Type Browser Scripting](/version-4.0/customizing/payload-type-development/browser-scripting) for the complete table, graph, media, and tasking-button schemas.

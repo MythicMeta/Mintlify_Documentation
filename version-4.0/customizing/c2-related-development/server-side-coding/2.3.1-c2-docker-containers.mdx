@@ -1,0 +1,33 @@
+---
+title: "1. Docker Containers"
+---
+
+## What's the goal of the container?
+
+What do the C2 docker containers do?
+Why are things broken out this way?
+In order to make things more modular within Mythic, most services are broken out into their own containers.
+When it comes to C2 profiles, they simply serve as an intermediary layer that translates between your special sauce C2 mechanism and the normal REST-ful interface that Mythic uses.
+This allows you to create any number of completely disjoint C2 profiles without having to modify anything in the main Mythic codebase and without worrying about any conflicting dependencies.
+
+### Container Information
+
+C2 Profile Containers, like Payload Type and Translation Containers, need to have the `mythic_container` library available (either PyPi or Go).
+From there you can leverage the `github.com/MythicMeta/MythicContainer` GoLang package or the `mythic_container` PyPi package depending on if you want to write the meta information about your C2 profile in Go or Python.
+The actual code that binds to ports and accepts messages can be written in any language.
+
+Mythic provides some basic containers that include these libraries by default, but they will also be pretty chonky.
+You're welcome to create your own and limit the size.
+
+## Container Components
+
+There are a few things needed to make a C2 container.
+For reference on general code structure options, check out [1. Payload Type Development](/version-4.0/customizing/payload-type-development).
+The general structure is the same for Payload Types, C2 Profiles, and Translation containers.
+
+<Note>
+When starting the container with Mythic, the local `Mythic/InstalledServices/[your c2 name]` path will be mounted as `/Mythic` in the container.
+</Note>
+
+Within the `server_folder_path` should be a file called `config.json`, this is what the operator is able to edit through the UI and should contain all of the configuration components.
+The one piece that doesn't need to be here are if the operator needs to add additional files (like SSL certs).

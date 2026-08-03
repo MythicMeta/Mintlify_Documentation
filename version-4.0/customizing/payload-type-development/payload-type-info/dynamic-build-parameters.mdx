@@ -1,0 +1,282 @@
+---
+title: "Dynamic Build Parameters & C2 Variations"
+---
+
+## Build Parameters
+
+Build parameters are defined on a payload type's definition and allow you to configure a payload build in a way outside of C2 specific configurations.
+These parameters are defined in an array with a few specific fields. Below are examples in Python and Go:
+
+<Tabs>
+<Tab title="Python">
+```python
+build_parameters = [
+        BuildParameter(
+            name="output_type",
+            parameter_type=BuildParameterType.ChooseOne,
+            choices=["WinExe", "Shellcode", "Service", "Source"],
+            default_value="WinExe",
+            description="Output as shellcode, executable, sourcecode, or service.",
+        ),
+        BuildParameter(
+            name="shellcode_format",
+            parameter_type=BuildParameterType.ChooseOne,
+            choices=shellcode_format_options,
+            default_value="Binary",
+            description="Donut shellcode format options.",
+            group_name="Shellcode Options",
+            hide_conditions=[
+                HideCondition(name="output_type", operand=HideConditionOperand.NotEQ, value="Shellcode")
+            ]
+        ),
+        BuildParameter(
+            name="shellcode_bypass",
+            parameter_type=BuildParameterType.ChooseOne,
+            choices=shellcode_bypass_options,
+            default_value="Continue on fail",
+            description="Donut shellcode AMSI/WLDP/ETW Bypass options.",
+            group_name="Shellcode Options",
+            hide_conditions=[
+                HideCondition(name="output_type", operand=HideConditionOperand.NotEQ, value="Shellcode")
+            ]
+        ),
+        BuildParameter(
+            name="adjust_filename",
+            parameter_type=BuildParameterType.Boolean,
+            default_value=False,
+            description="Automatically adjust payload extension based on selected choices.",
+        ),
+        BuildParameter(
+            name="debug",
+            parameter_type=BuildParameterType.Boolean,
+            default_value=False,
+            description="Create a DEBUG version.",
+        )
+    ]
+```
+
+</Tab>
+
+<Tab title="Go">
+```go
+BuildParameters: []agentstructs.BuildParameter{
+        {
+            Name:          "mode",
+            Description:   "Choose the build mode option. Select default for executables, c-shared for a .dylib or .so file, or c-archive for a .Zip containing C source code with an archive and header file",
+            Required:      false,
+            DefaultValue:  "default",
+            Choices:       []string{"default", "c-archive", "c-shared"},
+            ParameterType: agentstructs.BUILD_PARAMETER_TYPE_CHOOSE_ONE,
+        },
+        {
+            Name:          "architecture",
+            Description:   "Choose the agent's architecture",
+            Required:      false,
+            DefaultValue:  "AMD_x64",
+            Choices:       []string{"AMD_x64", "ARM_x64"},
+            ParameterType: agentstructs.BUILD_PARAMETER_TYPE_CHOOSE_ONE,
+        },
+        {
+            Name:          "proxy_bypass",
+            Description:   "Ignore HTTP proxy environment settings configured on the target host?",
+            Required:      false,
+            DefaultValue:  false,
+            ParameterType: agentstructs.BUILD_PARAMETER_TYPE_BOOLEAN,
+            GroupName:     "egress",
+        },
+        {
+            Name:          "garble",
+            Description:   "Use Garble to obfuscate the output Go executable.\nWARNING - This significantly slows the agent build time.",
+            Required:      false,
+            DefaultValue:  false,
+            ParameterType: agentstructs.BUILD_PARAMETER_TYPE_BOOLEAN,
+        },
+        {
+            Name:          "debug",
+            Description:   "Create a debug build with print statements for debugging.",
+            Required:      false,
+            DefaultValue:  false,
+            ParameterType: agentstructs.BUILD_PARAMETER_TYPE_BOOLEAN,
+        },
+        {
+            Name:          "egress_order",
+            Description:   "Prioritize the order in which egress connections are made (if including multiple egress c2 profiles)",
+            Required:      false,
+            ParameterType: agentstructs.BUILD_PARAMETER_TYPE_ARRAY,
+            DefaultValue:  []string{"http", "websocket", "dynamichttp", "httpx"},
+            GroupName:     "egress",
+        },
+        {
+            Name:          "egress_failover",
+            Description:   "How should egress mechanisms rotate",
+            Required:      false,
+            ParameterType: agentstructs.BUILD_PARAMETER_TYPE_CHOOSE_ONE,
+            Choices:       []string{"failover"},
+            DefaultValue:  "failover",
+            GroupName:     "egress",
+        },
+        {
+            Name:          "failover_threshold",
+            Description:   "How many failed attempts should cause a rotate of egress comms",
+            Required:      false,
+            ParameterType: agentstructs.BUILD_PARAMETER_TYPE_NUMBER,
+            DefaultValue:  10,
+            GroupName:     "egress",
+        },
+        {
+            Name:          "static",
+            Description:   "Statically compile the payload",
+            Required:      false,
+            ParameterType: agentstructs.BUILD_PARAMETER_TYPE_BOOLEAN,
+            DefaultValue:  false,
+            SupportedOS:   []string{agentstructs.SUPPORTED_OS_LINUX},
+        },
+    },
+```
+</Tab>
+</Tabs>
+
+Each build parameter has a few different pieces you can specify:
+
+* `name` - the name of the parameter (this is required)
+* `description` - the description of the parameter - this is displayed along with the name to give users more context about what the parameter is doing
+* `required` - this indicates if the user is required to specify something or not
+* `parameter_type` - this is the type of value for this and can be boolean, number, choose one, choose multiple, file, string, dictionary, date, array (of strings), array of files
+* `default_value` - the default value for the field
+* `choices` - a list of choices to present for a choose one or choose multiple display
+* `supported_os` - optional list of strings of operating systems that work with this parameter. This is the same "OS" selection that you specify as part of your supported os for the payload type definition. For example, if this is "Linux", but the user selected "macOS", then this option will NOT be presented to the user.
+* `group_name` - optional name you can specify to group parameters together logically in the UI
+* `hide_conditions` - an optional list of HideConditions (only one element in the hide condition needs to be true for the entire thing to be hidden)
+
+### Hide Conditions
+
+Hide conditions on a build parameter allow you specify, based on the values of other build parameters, if the current build parameter should be hidden from view or not.
+A good example would be to hide build parameters related to shellcode options if another option specify the output type isn't shellcode.
+
+Hide Conditions are generally defined as:
+```python
+HideCondition(name="output_type", operand=HideConditionOperand.NotEQ, value="Shellcode")
+```
+
+* `name` - this specifies the name of the _OTHER_ build parameter that you're looking at
+* `operand` - this specifies the "operand" that we're going to use. This can be one of the following:
+    * EQ                 = "eq"
+    * NotEQ              = "neq"
+    * IN                 = "in"
+    * NotIN              = "nin"
+    * LessThan           = "lt"
+    * GreaterThan        = "gt"
+    * LessThanOrEqual    = "lte"
+    * GreaterThanOrEqual = "gte"
+    * StartsWith         = "sw"
+    * EndsWith           = "ew"
+    * Contains           = "co"
+    * NotContains        = "nco"
+* `value` - this is what we're comparing the current option's value to. In the above example, we would _HIDE_ that build parameter if the `output_type` build parameter's value is _Not EQ_ to the value _Shellcode_.
+  * if you're using `in` or `nin`, then instead of `value` you'd specify `choices`
+
+## C2 Parameter Deviations
+
+This is another really powerful addition in Mythic 3.4 - the ability for a payload type to define a variation to a supported c2 profile.
+This is part of the payload type's definition, but allows you to make light modifications to any parameter for a supported c2 profile. The only thing you can't do is _add_ new parameter values - only remove or modify.
+
+<Tabs>
+<Tab title="Python">
+```python
+c2_parameter_deviations = {
+        "http": {
+            "get_uri": C2ParameterDeviation(supported=False),
+            "query_path_name": C2ParameterDeviation(supported=False),
+            "headers": C2ParameterDeviation(supported=True, dictionary_choices=[
+                DictionaryChoice(name="User-Agent", default_value="Hello", default_show=True),
+                DictionaryChoice(name="HostyHost", default_show=False, default_value=""),
+            ])
+        }
+    }
+```
+</Tab>
+<Tab title="Go">
+```go
+C2ParameterDeviations: map[string]map[string]agentstructs.C2ParameterDeviation{
+        "http": {
+            "get_uri": {
+                Supported: false,
+            },
+            "query_path_name": {
+                Supported: false,
+            },
+        },
+    },
+```
+</Tab>
+</Tabs>
+
+The above shows an example of configuring the c2 parameter deviations in python and go. They're pretty straight forward, but they might look intimidating.
+They are dictionaries (map in go) where the first key is the name of the c2 profile. That value is another dictionary that maps the name of the parameter to a C2ParameterDeviation object.
+The C2ParameterDeviation object has a few fields:
+
+* `supported` - indicate if this field is supported or not. If it's not supported, then it won't be shown to the user.
+* `default_value` - your own default value instead of the one that's normally provided
+* `choices` - your own set of choices instead of those that are provided
+* `dictionary_choices` - your own set of dictionary choice objects instead of what's normally provided
+
+## Mythic 4.0 parameter additions
+
+Build parameters can now separate stable wire values from labels shown to operators, control UI order, query choices dynamically, and collect structured JSON strings.
+
+```python
+from mythic_container.PayloadBuilder import (
+    BuildParameter,
+    BuildParameterType,
+    ComplexChoice,
+    PTRPCDynamicQueryBuildParameterFunctionMessage,
+    PTRPCDynamicQueryBuildParameterFunctionMessageResponse,
+)
+
+async def query_targets(
+    msg: PTRPCDynamicQueryBuildParameterFunctionMessage,
+) -> PTRPCDynamicQueryBuildParameterFunctionMessageResponse:
+    environment = msg.OtherParameters.get("environment", "production")
+    return PTRPCDynamicQueryBuildParameterFunctionMessageResponse(
+        Success=True,
+        ComplexChoices=[
+            ComplexChoice(DisplayValue=f"Primary ({environment})", Value="primary"),
+            ComplexChoice(DisplayValue=f"Backup ({environment})", Value="backup"),
+        ],
+    )
+
+build_parameters = [
+    BuildParameter(
+        name="environment",
+        display_name="Deployment Environment",
+        parameter_type=BuildParameterType.ChooseOne,
+        choices=["prod", "dev"],
+        choices_display_names={"prod": "Production", "dev": "Development"},
+        default_value="prod",
+        ui_position=1,
+    ),
+    BuildParameter(
+        name="target",
+        display_name="Build Target",
+        parameter_type=BuildParameterType.ChooseOne,
+        dynamic_query_function=query_targets,
+        ui_position=2,
+    ),
+]
+```
+
+`OtherParameters` contains the other values currently selected in the build form, which lets a dynamic query return choices conditioned on prior input. Return `Choices` for identical display/wire strings or `ComplexChoices` for independent `DisplayValue` and `Value` fields.
+
+The complete v4 fields added to these definitions are:
+
+- `display_name` — human-readable label; `name` remains the stable build key
+- `choices_display_names` — map stored choice values to UI labels
+- `ui_position` — explicit ordering within a group
+- `dynamic_query_function` — populate `ChooseOne` or `ChooseMultiple` values when the form needs them
+- `json_string_schema` — drive synchronized visual/source editing for `BuildParameterType.JSONString`
+
+See [JSONString Parameters](/version-4.0/customizing/payload-type-development/payload-type-info/json-string-parameters) for schema examples.
+
+### Expanded hide-condition operands
+
+In addition to `eq`, `neq`, `in`, and `nin`, v4 supports numeric comparisons `lt`, `gt`, `lte`, and `gte`, and string tests `sw` (starts with), `ew` (ends with), `co` (contains), and `nco` (does not contain). Multiple conditions remain ORed: if any condition matches, Mythic hides the parameter.

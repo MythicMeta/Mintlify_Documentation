@@ -1,0 +1,66 @@
+---
+title: "API Tokens"
+description: "Create and use Mythic 4.0 opaque, scoped API tokens."
+---
+
+API tokens are long-lived credentials for scripts, bots, eventing functions, and integrations.
+In Mythic 4.0 they are opaque values that begin with `mtk_`; they are not JWTs.
+
+<Warning>
+Mythic shows a token value only once and stores only its hash.
+Copy it into a secret manager when it is created.
+A lost value cannot be recovered; create a replacement and delete the old token.
+</Warning>
+
+## Create a token
+
+Open operator settings, select the more dropdown next to your user or a bot account, click  **+ API Tokens**, choose a descriptive name, and select the minimum required scopes.
+The creating identity can grant only scopes it already has. A write scope implies the corresponding read scope.
+
+Common scope forms are:
+
+- `callback.read` or `callback.write` for one resource family
+- `task.*` for all task scopes
+- `*` for every scope available to the identity
+
+Use the global wildcard only for trusted administration that cannot be expressed more narrowly.
+Operation membership, operator roles, callback locks, and block lists still apply after a scope check succeeds.
+
+You can also create a token through GraphQL:
+
+```graphql
+mutation CreateReadOnlyMonitor {
+  createAPIToken(
+    name: "response monitor"
+    scopes: ["callback.read", "task.read", "response.read"]
+  ) {
+    status
+    error
+    token_value
+    scopes
+  }
+}
+```
+
+## Use a token
+
+Access tokens and API tokens use the same standard header:
+
+```bash
+curl --insecure https://127.0.0.1:7443/graphql \
+  -H 'Authorization: Bearer mtk_REPLACE_WITH_TOKEN' \
+  -H 'Content-Type: application/json' \
+  --data '{"query":"query { whoami { status username current_operation_id scopes } }"}'
+```
+
+The legacy `apitoken: <value>` header is not accepted in v4. Never place a token in a URL, checked-in source file, task parameter, or log message.
+
+## Inspect and revoke access
+
+- `whoami` reports the authenticated identity, current operation, and effective scopes.
+- `apiTokenScopeDefinitions` lists available resources and scope descriptions.
+- `scopeCheck` lets an integration verify required scopes before beginning work.
+- Deactivate a token temporarily or delete it permanently from operator settings.
+
+All API tokens created before upgrading from 3.4 must be regenerated.
+See [Mythic 3.4 -> 4.0 Updates](/version-4.0/updating/mythic-3.4-greater-than-4.0-updates) for the complete migration checklist.

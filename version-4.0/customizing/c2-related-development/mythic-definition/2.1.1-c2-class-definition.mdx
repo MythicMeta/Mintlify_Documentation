@@ -1,0 +1,88 @@
+---
+title: "1. Getting Started"
+---
+
+## What are C2 Profiles
+
+Command and Control (C2) profiles live in their own docker containers (like everything) and act as a forwarding mechanism between whatever your special sauce C2 protocol is and what the back-end Mythic server understands (HTTP POST).
+Their entire role in life is to get data off the wire from whatever special communications format you're using and forward that to Mythic.
+
+By defining a C2 protocol specification, other payload types can register that they speak that C2 protocol as well and easily hook in without having to do back-end changes.
+By having C2 protocols divorced from the main Mythic server, you can create entirely new C2 protocols more easily and you can do them in whatever language you want.
+If you want to do all your work in GoLang, C#, or some other language for the C2 protocol, go for it.
+It's all encapsulated in the C2's Docker container with whatever environment you desire.
+
+## How does a C2 Profile work in Mythic?
+
+When we look at how C2 Profiles work within Mythic, there are two different stages to consider:
+
+1. How is the C2 Profile defined so that Mythic can track all of the parameters and present them to the user when generating payloads.
+
+2. How does the C2 Profile's code run so that it can listen for agent traffic and communicate with Mythic.
+
+#### Step 1 - Defining your Profile
+
+Just like with Payload Types, C2 Profiles can either run within Docker, on a separate host, or within a VM somewhere.
+This isn't a hard requirement, but makes it easier to share them.
+We're going to do all of the initial development **_without_** Docker, so put that out of your mind for now.
+
+<Info>
+Since we're going to do this without Docker initially, we need to change a few things on your Mythic instance:
+1. `sudo ./mythic-cli config set rabbitmq_bind_localhost_only false`
+2. `sudo ./mythic-cli config set mythic_server_bind_localhost_only false`
+3. `sudo ./mythic-cli start`
+4. `sudo ./mythic-cli config get rabbitmq_password`
+5. Take note of your Mythic server IP address
+</Info>
+
+<CodeGroup dropdown>
+
+```python MyC2.py
+from mythic_container.C2ProfileBase import *
+import pathlib
+
+class MyC2(C2Profile): # your class name can be anything, but must subclass C2Profile
+    name = "myc2"
+    description = f"My Custom C2."
+    author = "@you"
+    is_p2p = False
+    semver = "0.0.1"
+    # icons aren't required, but if you do provide them, they must be svg format
+    agent_icon_path = pathlib.Path(".") / "myc2.svg"
+    dark_mode_agent_icon_path = pathlib.Path(".") / "myc2_darkmode.svg"
+    server_binary_path = pathlib.Path(".") / "myc2_executable"
+    server_folder_path = pathlib.Path(".")
+    parameters = [
+        ...
+    ]
+```
+
+```go MyC2.go
+var dnsc2definition = c2structs.C2Profile{
+    Name:             "myc2",
+    Author:           "@you",
+    Description:      fmt.Sprintf("My Custom C2."),
+    IsP2p:            false,
+    SemVer:           "0.0.1",
+    ServerBinaryPath: filepath.Join(".", "myc2_executable"),
+    ServerFolderPath: filepath.Join("."),
+}
+
+func Initialize() {
+    // note: the "myc2" here in the Get call needs to match the name of your c2 profile exactly
+    c2structs.AllC2Data.Get("myc2").AddC2Definition(dnsc2definition)
+}
+```
+</CodeGroup>
+
+Some context about these fields:
+
+* `name` - as you might expect, this is the `name` of the profile that shows up in the Mythic UI and how payload types specify they support this format
+* `is_p2p` - this indicates if this is a P2P profile or an Egress profile
+    * the difference here is that a P2P profile doesn't have any "logic" code to run since all that logic is in the agents, not this server side
+* `server_binary_path` - this is the path to the code (any language, just must be executable) that actually does your C2 logic
+    * this is the code that will open ports, connect to 3rd party services, etc.
+    * if this is a scripted language, like `python`, then you need to put a `#! python` at the top of your file specified here
+* `server_folder_path` - this is the path to the folder where `server_binary_path` is generally going to run
+    * the point here is that in the UI when you click the little paperclip icon to browser the files of a container - **this** folder is what you're seeing
+    * this is where you'll include your `config.json` file that allows an operator to configure the server side of your profile

@@ -1,0 +1,15 @@
+---
+title: "Container Syncing"
+---
+
+## What is it?
+
+When your container starts up, it connects to the rabbitMQ broker system.
+The first thing it does upon successfully connecting to the rabbitMQ broker system is to send its own synced data.
+Mythic then tries to look up the associated payload type and, if it can find it, will update the running status.
+
+This data is simply a JSON representation of everything about your payload - information about the payload type, all the commands, build parameters, command parameters, browser scripts, etc.
+
+## Current Container Versions
+
+Latest versions can always be found on the Mythic [README](https://github.com/its-a-feature/Mythic).

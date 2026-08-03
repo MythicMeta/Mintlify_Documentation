@@ -1,0 +1,34 @@
+---
+title: "Interactive File Editor"
+description: "Edit remote UTF-8 text through an agent with history and conflict detection"
+---
+
+Mythic 4.0 can render an interactive file editor inside task output when an agent command advertises `task_response:file_editor`.
+
+The editor supports:
+
+- UTF-8 text files up to 2 MB;
+- save, refresh, and explicit close actions;
+- version history for snapshots returned by the agent;
+- SHA-1 based conflict detection;
+- review of the exact staged edit before a forced overwrite;
+- read-only history after the parent task completes.
+
+<Frame>
+  <img src="/images/version-4.0/operational-pieces-file-editor.png"/>
+</Frame>
+
+## Save flow
+
+Mythic does not put the edited contents directly in interactive tasking.
+It uploads the editor contents as a tracked Mythic file, then sends that `file_id`, the last known SHA-1, and a request ID to the agent.
+
+<Warning>
+**Save anyway** is a deliberate force-overwrite path. Review the staged file and the agent-reported conflict before using it.
+</Warning>
+
+## Agent support
+
+The editor appears only for a command that implements the file-editor interactive message protocol.
+Commands that merely return file data or ordinary interactive terminal output continue to use their existing renderers.
+Agent developers should follow the [File Editor Protocol](/version-4.0/customizing/payload-type-development/create_tasking/agent-side-coding/file-editor-protocol).

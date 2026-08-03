@@ -1,0 +1,108 @@
+---
+title: "9. Agent RPC"
+description: "Asynchronous payload-type container requests initiated by an agent"
+---
+
+Agent RPC lets an agent ask its payload type container to perform an asynchronous, command-specific operation.
+The request arrives in a normal `post_response` message and the result is delivered in the callback's next response.
+
+## Agent request
+
+Add `agent_rpc` to a response for the task that owns the request:
+
+```json
+{"action": "post_response",
+    "responses": [
+        {
+          "task_id": "agent-task-uuid",
+          "agent_rpc": {
+            "name": "lookup",
+            "arguments": {
+              "key": "host-configuration",
+              "include_metadata": true
+            }
+          }
+        }
+    ]
+}
+
+```
+
+`arguments` can be any JSON-compatible value.
+Mythic uses the task to route the request to the command's payload type container and preserve callback/task correlation.
+
+## Python handler
+
+Override `agent_rpc` on the command class:
+
+```python
+from typing import Any
+from mythic_container.MythicCommandBase import (
+    PTTaskAgentRPCMessageResponse,
+    PTTaskMessageAllData,
+)
+
+async def agent_rpc(
+    self,
+    task: PTTaskMessageAllData,
+    name: str,
+    arguments: Any,
+) -> PTTaskAgentRPCMessageResponse:
+    if name != "lookup":
+        return PTTaskAgentRPCMessageResponse(
+            Status="error",
+            Output=f"unsupported RPC {name}",
+        )
+    return PTTaskAgentRPCMessageResponse(
+        Status="success",
+        Output={"value": await lookup_value(arguments["key"])},
+    )
+```
+
+## Go handler
+
+Register a payload-wide handler on the payload definition:
+
+```go
+agentstructs.AllPayloadData.Get("myagent").AddAgentRPCFunction(
+    func(
+        ctx context.Context,
+        task *agentstructs.PTTaskMessageAllData,
+        name string,
+        arguments any,
+    ) agentstructs.PTTaskAgentRPCMessageResponse {
+        if name != "lookup" {
+            return agentstructs.PTTaskAgentRPCMessageResponse{
+                Status: "error",
+                Output: "unsupported RPC",
+            }
+        }
+        return agentstructs.PTTaskAgentRPCMessageResponse{
+            Status: "success",
+            Output: map[string]any{"value": "example"},
+        }
+    },
+)
+```
+
+The Mythic sets `callback_id` and `agent_task_id` on the response. Handler code supplies only `status` and `output`.
+
+## Agent result
+
+Mythic returns the asynchronous result in the normal `responses` array:
+
+```json
+{
+  "action": "get_tasking",
+  "responses": [
+    {
+      "task_id": "agent-task-uuid",
+      "status": "success",
+      "output": {"value": "example"}
+    }
+  ]
+}
+```
+
+Treat `output` as an application-level response.
+Validate its shape on the agent and handle an error status without assuming tasking will also be present.

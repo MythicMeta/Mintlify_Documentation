@@ -1,0 +1,98 @@
+---
+title: "6. Dynamic Command Parameter Values"
+description: "Populate command choices from callback context and Mythic RPC"
+---
+
+Dynamic command parameters let a payload type calculate the choices shown to an operator when a tasking modal opens. Use them when the valid values depend on callback state, another parameter, Mythic data, or an external service.
+
+Dynamic queries run before a task exists. They can query Mythic by callback, but cannot use task-scoped RPC calls.
+
+## Define a query
+
+Set `dynamic_query_function` on a `ChooseOne` or `ChooseMultiple` command parameter. The function receives a `PTRPCDynamicQueryFunctionMessage` and returns a `PTRPCDynamicQueryFunctionMessageResponse`.
+
+```python
+class ShellArguments(TaskArguments):
+    def __init__(self, command_line, **kwargs):
+        super().__init__(command_line, **kwargs)
+        self.args = {
+            "command": CommandParameter(
+                name="command",
+                type=ParameterType.String,
+                description="Command to run",
+            ),
+            "file": CommandParameter(
+                name="file",
+                type=ParameterType.ChooseOne,
+                dynamic_query_function=self.get_executables,
+            ),
+        }
+
+    async def get_executables(
+        self, input_msg: PTRPCDynamicQueryFunctionMessage
+    ) -> PTRPCDynamicQueryFunctionMessageResponse:
+        file_result = await SendMythicRPCFileSearch(
+            MythicRPCFileSearchMessage(
+                CallbackID=input_msg.Callback,
+                LimitByCallback=False,
+                Filename="",
+            )
+        )
+
+        if not file_result.Success:
+            return PTRPCDynamicQueryFunctionMessageResponse(
+                Success=False,
+                Error=file_result.Error,
+            )
+
+        requested_suffix = input_msg.OtherParameters.get("suffix", ".exe")
+        choices = sorted(
+            {
+                entry.Filename
+                for entry in file_result.Files
+                if entry.Filename.endswith(requested_suffix)
+            }
+        )
+        return PTRPCDynamicQueryFunctionMessageResponse(
+            Success=True,
+            Choices=choices,
+        )
+
+    async def parse_arguments(self):
+        if not self.command_line:
+            raise ValueError("Missing arguments")
+        if self.command_line[0] == "{":
+            self.load_args_from_json_string(self.command_line)
+        else:
+            self.add_arg("command", self.command_line)
+```
+
+<Info>
+`OtherParameters` contains the current values of the other fields in the modal. This lets one dynamic choice depend on an earlier operator selection.
+</Info>
+
+## Request fields
+
+The request contains:
+
+| Python field | JSON field | Purpose |
+| --- | --- | --- |
+| `Command` | `command` | Command whose modal is open |
+| `ParameterName` | `parameter_name` | Parameter requesting choices |
+| `PayloadType` | `payload_type` | Payload type of the callback |
+| `CommandPayloadType` | `command_payload_type` | Payload type that owns the command, including augmentation containers |
+| `Callback` | `callback` | Internal callback ID for RPC calls |
+| `CallbackDisplayID` | `callback_display_id` | Operation-scoped callback ID shown in the UI |
+| `AgentCallbackID` | `agent_callback_id` | Callback UUID known to the agent |
+| `PayloadOS` | `payload_os` | OS selected for the backing payload |
+| `PayloadUUID` | `payload_uuid` | UUID of the backing payload |
+| `Secrets` | `secrets` | Secrets available to the requesting operator |
+| `OtherParameters` | `other_parameters` | Current values from the rest of the modal |
+
+Return `Success=True` and a `Choices` list. Return `Success=False` with `Error` when the choices could not be generated. An empty successful list means there are currently no valid choices.
+
+## Related dynamic parameters
+
+Mythic 4.0 also supports dynamic queries for payload build parameters and C2 profile parameters.
+Those definitions can return complex choices with separate stored and display values.
+See [Dynamic Build Parameters](/version-4.0/customizing/payload-type-development/payload-type-info/dynamic-build-parameters) and [C2 Profile Parameters](/version-4.0/customizing/c2-related-development/mythic-definition/2.1.2-c2-parameters).

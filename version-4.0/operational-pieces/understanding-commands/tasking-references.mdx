@@ -1,0 +1,94 @@
+---
+title: "Tasking References"
+description: "Resolve stored credentials, payload links, callbacks, and graph edges while tasking"
+---
+
+Tasking references let an operator select Mythic-tracked objects without copying their raw values into the command line.
+Mythic resolves references before the payload type's tasking functions run, records how each value was resolved, and sends the resolution metadata to the container.
+
+Set `resolve_task_references: true` when creating tasks through GraphQL. The Mythic UI enables resolution for supported tasking paths.
+
+## Credential references
+
+Use a credential's operation-scoped database ID:
+
+```text
+@cred:42
+```
+
+For a `CredentialJson` parameter, this resolves to the complete structured credential. In a string parameter, select one field:
+
+```text
+@cred:42.credential
+@cred:42.account
+@cred:42.realm
+@cred:42.type
+@cred:42.subtype
+@cred:42.custom_display
+@cred:42.id
+```
+
+The credential must exist, not be deleted, and belong to the current operation.
+
+## Link references
+
+`@link` resolves structured `AgentConnect` parameters from a callback or payload. Use comma-separated `key=value` arguments:
+
+```text
+@link:callback=17,c2=tcp
+@link:payload=bc3d10a8-8d2a-4ced-890e-ccf835df4050,host=WORKSTATION01,c2=tcp
+```
+
+- `callback` is the callback display ID and must identify an active callback in the operation.
+- `payload` is a successfully built payload UUID. `host` records a payload-on-host relationship after task creation.
+- `c2` is optional when Mythic can choose an unambiguous C2 profile.
+
+## Edge references
+
+For a structured `LinkInfo` parameter, reference a P2P callback graph edge:
+
+```text
+@link:edge=91
+```
+
+The edge must be connected to the callback being tasked.
+Mythic resolves the opposite callback, its payload, C2 profile, and connection parameters.
+The wire form is `@link:edge=<callbackgraphedge_id>`.
+
+## Container resolution metadata
+
+Each task includes `keyword_resolution` entries:
+
+```json
+{
+  "raw": "@cred:42.account",
+  "keyword": "cred",
+  "selector": "42",
+  "field": "account",
+  "value_type": "string",
+  "expanded_value": "alice",
+  "parameter_names": ["username"]
+}
+```
+
+Container libraries expose helpers to reconstruct the operator's original expression when display parameters should avoid showing sensitive expanded values:
+
+<CodeGroup>
+```python Python
+
+safe_display = taskData.Task.RevertKeywords(
+    taskData.args.get_arg("username"),
+    "username",
+)
+```
+
+```go Go
+value, _ := taskData.Args.GetArg("username")
+safeDisplay := taskData.Task.RevertKeywords(value, "username")
+```
+</CodeGroup>
+
+<Info>
+Resolution is operation-scoped and happens on the server.
+Payload type code should consume the expanded value and use the recorded metadata for display or audit context; it should not query a second time just to resolve the same reference.
+</Info>

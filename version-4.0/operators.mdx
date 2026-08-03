@@ -1,0 +1,39 @@
+---
+title: "Operators"
+description: "Accounts, roles, invite links, aliases, and bot identities in Mythic 4.0."
+---
+
+## Passwords and authentication
+
+Every interactive operator authenticates with a username and password. On initial startup Mythic creates `mythic_admin` with `MYTHIC_ADMIN_PASSWORD` from the environment or `Mythic/.env`; if no value is supplied, Mythic generates one. View the generated value with `sudo ./mythic-cli config get MYTHIC_ADMIN_PASSWORD`.
+
+Passwords must be at least 12 characters. Ten consecutive failed attempts lock a normal account. The initial admin account is not locked, but failed authentication attempts are throttled.
+
+Protected v4 HTTP and GraphQL requests require an access token or API token in `Authorization: Bearer <token>`. For unattended automation, create a narrowly [scoped API token](/version-4.0/operational-pieces/api-tokens).
+
+## Operator permissions
+
+- **Admin** is a global role that can manage operators and access every operation.
+- **Operation admin** leads one operation and can manage its membership, unlock callbacks, and override its OpSec checks.
+- **Operator** can task and modify resources in assigned operations, subject to block lists and callback locks.
+- **Spectator** can read the assigned operation but cannot task callbacks or modify operational data.
+
+## Invite links
+
+Admins can enable invite links with `MYTHIC_SERVER_ALLOW_INVITE_LINKS` or from global settings. Each link can assign the new operator to an operation and enforce a usage limit. Generated links, use counts, and revocation state are persisted, so an unused link remains manageable across server restarts until it is revoked or exhausted.
+
+Every use is recorded in the event feed. Review and revoke unused links from operator settings.
+
+<Frame>
+<img src="/images/version-4.0/operators-invite-link.png"/>
+</Frame>
+
+## Aliases
+
+Mythic 4.0 aliases let an operator save reusable command or generic text expansions. They can be scoped to payload types or chat containers, can reference other aliases, and can be imported or exported. See [Operator Aliases](/version-4.0/operational-pieces/operator-aliases).
+
+## Bots
+
+Bot accounts cannot use the interactive login page. They authenticate with API tokens and can be assigned operation roles and block lists like other operators. Mythic creates an operation bot when an operation is created, and admins can create additional bot accounts.
+
+Grant bot tokens only the scopes needed by the automation. Token scopes do not elevate a bot beyond its operation membership or role.

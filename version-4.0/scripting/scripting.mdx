@@ -1,0 +1,63 @@
+---
+title: "Python Scripting"
+description: "Automate Mythic 4.0 with the supported Python package."
+---
+
+Install the v4-compatible package from PyPI:
+
+```bash
+python3 -m pip install 'mythic>=0.3.0rc8'
+```
+
+Use the newest compatible stable release when one is available. The source and examples live in [MythicMeta/Mythic_Scripting](https://github.com/MythicMeta/Mythic_Scripting).
+
+## Log in with an API token
+
+```python
+import asyncio
+from mythic import mythic
+
+async def main():
+    client = await mythic.login(
+        server_ip="127.0.0.1",
+        server_port=7443,
+        apitoken="mtk_REPLACE_WITH_TOKEN",
+        ssl=True,
+    )
+    callbacks = await mythic.get_all_active_callbacks(mythic=client)
+    for callback in callbacks:
+        print(callback["display_id"], callback["host"], callback["user"])
+
+asyncio.run(main())
+```
+
+Create the token in Mythic first and give it only the scopes used by the script. The package sends API and access tokens through `Authorization: Bearer <token>`.
+
+## Log in with a password
+
+```python
+client = await mythic.login(
+    server_ip="127.0.0.1",
+    username="operator",
+    password="replace-me",
+    ssl=True,
+)
+```
+
+Password login produces a refreshable session. Pass `create_apitoken=True` only when the script intentionally needs to mint and retain a long-lived token; by default that helper requests broad access, so creating a named token with explicit scopes is safer for production automation.
+
+## Run a custom GraphQL query
+
+```python
+result = await mythic.execute_custom_query(
+    mythic=client,
+    query="""
+    query Identity {
+      whoami { status username current_operation_id scopes }
+    }
+    """,
+)
+print(result["whoami"])
+```
+
+The Python package also exposes async subscription generators for callbacks, tasks, responses, files, and operational events. Prefer the supplied helpers for stable workflows; use `execute_custom_query` when you need a field that is not yet wrapped.

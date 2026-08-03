@@ -1,0 +1,327 @@
+---
+title: "Mythic 3.4 -> 4.0 Updates"
+sidebarTitle: "Mythic 3.4 -> 4.0 Updates"
+description: "Breaking changes, migration steps, and developer updates for Mythic v4.0"
+---
+
+Mythic 4.0 is a major release.
+It adds operation chat, scoped API tokens, operator aliases, task references, richer payload and C2 parameters, conditional wrapper compatibility, resumable file transfers, and interactive file editing.
+It also changes authentication and several public API contracts.
+
+<Warning>
+Read the breaking changes before upgrading a production server.
+Existing API tokens stop working, older container libraries cannot preserve v4 authentication context, and integrations using renamed Hasura actions or internal database IDs must be updated.
+</Warning>
+
+## Upgrade checklist
+
+1. Schedule downtime and back up both the database and Mythic-managed files.
+
+   ```bash
+   sudo ./mythic-cli backup database /path/to/mythic-backup
+   sudo ./mythic-cli backup files /path/to/mythic-files-backup
+   ```
+
+2. Record scripts, bots, eventing workflows, and external integrations that use API tokens, `/api/v1.4` routes, Hasura actions, or task/callback IDs.
+3. Update every payload type, C2 profile, translation container, and consuming container to a v4-compatible container library. The v4 development branches use:
+
+   - Go: `github.com/MythicMeta/MythicContainer@v1.7.0-rc4`
+   - Python: `mythic-container==0.7.0-rc9`
+   - Python scripting: `mythic==0.3.0-rc8`
+
+   Use the newest v4-compatible release when a later stable tag is available.
+<Note>
+For consistency sake, if you have a public service that you're updating, make the updates to a branch called `Mythic-v4.0.0`.
+This will make it so users doing testing can always check out/install the same branch for this batch of updates.
+</Note>
+4. Update the Mythic checkout, rebuild `mythic-cli`, and start Mythic. Database migrations run automatically.
+
+   ```bash
+   git checkout origin Mythic-v4.0.0
+   sudo make
+   sudo ./mythic-cli start
+   sudo ./mythic-cli install github https://github.com/MythicAgents/apollo -f -b Mythic-v4.0.0
+   sudo ./mythic-cli install github https://github.com/MythicC2Profiles/http -f -b Mythic-v4.0.0
+   sudo ./mythic-cli install github https://github.com/MythicC2Profiles/basic_webhook -f -b Mythic-v4.0.0
+   etc
+   ```
+
+5. Confirm the server and UI versions, then check **Installed Services** for incompatible or offline containers.
+6. Recreate API tokens with the minimum required scopes and update each caller to use `Authorization: Bearer <token>`.
+7. Run a smoke test for login, GraphQL queries, payload builds, callback tasking, file upload/download, eventing, and every external integration.
+
+## Breaking changes
+
+### Authentication is Bearer-only
+
+Protected HTTP and GraphQL requests no longer authenticate from the `mythic` cookie. Access tokens and API tokens use the same header:
+
+```http
+Authorization: Bearer mtk_example_token_value
+```
+
+The old API-token header is no longer valid:
+
+```diff
+- apitoken: <token>
++ Authorization: Bearer <token>
+```
+
+Browser sessions continue to work through Mythic's UI because the UI reads its access token and adds the header to authenticated requests.
+Custom browser extensions, reverse proxies, and scripts that depended on cookie-only authentication must be updated.
+
+### API tokens are opaque, scoped, and shown once
+
+API tokens are no longer long-lived JWTs.
+New tokens begin with `mtk_`, are hashed at rest, and are shown only when created.
+Save a new token immediately; Mythic cannot recover its value from the UI or database.
+
+All v3.4 API tokens must be regenerated.
+A token can receive only scopes already available to the caller.
+Write scopes include the corresponding read scope.
+Resource wildcards such as `task.*` and the global `*` scope are supported.
+
+```graphql
+mutation CreateAutomationToken {
+  createAPIToken(
+    name: "task monitor"
+    scopes: ["callback.read", "task.read", "response.read"]
+  ) {
+    status
+    error
+    token_value
+  }
+}
+```
+
+Use `apiTokenScopeDefinitions`, `scopeCheck`, and `whoami` to discover available scopes and inspect the current identity.
+
+### `/api/v1.4` was removed
+
+Mythic action and webhook routes are now mounted without the `/api/v1.4` prefix. For example:
+
+```diff
+- POST /api/v1.4/task_upload_file_webhook
++ POST /task_upload_file_webhook
+```
+
+Do not mechanically add a different version prefix.
+Read the current Hasura metadata or use the supported scripting/container libraries for route construction.
+
+### Hasura actions use camelCase
+
+The remaining snake_case action names were normalized:
+
+| Mythic 3.4 | Mythic 4.0 |
+| --- | --- |
+| `callbackgraphedge_add` | `callbackgraphedgeAdd` |
+| `callbackgraphedge_remove` | `callbackgraphedgeRemove` |
+| `config_check` | `configCheck` |
+| `download_bulk` | `downloadBulk` |
+| `dynamic_query_function` | `dynamicQueryFunction` |
+| `rebuild_payload` | `rebuildPayload` |
+| `redirect_rules` | `redirectRules` |
+| `reissue_task` | `reissueTask` |
+| `reissue_task_handler` | `reissueTaskHandler` |
+| `typedarray_parse_function` | `typedarrayParseFunction` |
+| `meHook` | `whoami` |
+
+Regenerate GraphQL clients or update stored queries after changing these names.
+
+### Actions use operation-scoped display IDs
+
+Public task and callback actions now use the IDs operators see in the UI. Migrate ambiguous arguments as follows:
+
+| Old argument | New argument |
+| --- | --- |
+| `task_id` | `task_display_id` |
+| `task_ids` / `tasks` | `task_display_ids` |
+| `callback_id` | `callback_display_id` |
+| `callback_ids` / `callbacks` | `callback_display_ids` |
+| `parent_task_id` | `parent_task_display_id` |
+
+For example, v4 task creation uses display IDs and can resolve task references explicitly:
+
+```graphql
+mutation CreateTask($callback: Int!, $params: String!) {
+  createTask(
+    callback_display_id: $callback
+    command: "shell"
+    params: $params
+    resolve_task_references: true
+  ) {
+    status
+    error
+  }
+}
+```
+
+Database primary keys still exist in direct table queries and internal container messages.
+Do not substitute a display ID where a schema explicitly asks for a database `id`.
+
+### Container RPC carries authenticated context
+
+Mythic now propagates an authenticated context through RabbitMQ and enforces scopes on container RPC requests and responses.
+All services must use compatible container libraries; hand-written RabbitMQ clients must preserve the auth-context header when forwarding work.
+
+```mermaid
+sequenceDiagram
+    participant U as Operator or API token
+    participant M as Mythic
+    participant Q as RabbitMQ
+    participant C as Container
+    U->>M: Request with Bearer token
+    M->>M: Validate identity, operation, and scopes
+    M->>Q: RPC plus signed auth context
+    Q->>C: Deliver request and context
+    C->>Q: Response preserving context
+    Q->>M: Correlated response
+    M->>M: Enforce response route scope
+    M-->>U: Result
+```
+
+If a container works on v3.4 but v4 reports missing context or scope errors, update its library before debugging the RPC itself.
+
+### Eventing API-token inputs are objects
+
+The v4 `mythic.apitoken` schema is an object with a token `type` and explicit `scopes` list:
+
+```yaml
+inputs:
+  API_TOKEN:
+    type: mythic.apitoken
+    scopes:
+      - callback.read
+      - task.write
+      - response.read
+```
+
+The legacy scalar shorthand remains as a compatibility path and requests broad `*` access.
+Migrate workflows to the object form so their required permissions are visible and constrained.
+
+The token exists only for the event step and is invalidated when the step finishes.
+Grant only the scopes the custom function needs.
+
+### Wrapper allowlists were replaced
+
+The payload type fields `wrapped_payloads` and `supported_wrapper_payload_types` were replaced by `wrapper_payload_requirements`.
+Builders now return `build_metadata` (`architecture` and `format`; Mythic records the selected OS), and wrappers declare exact accepted combinations with optional build-parameter conditions.
+This way wrappers and payloads can link up in a supported way without hardcoding payload type names.
+
+
+The following wrapper example says that it:
+* supports a payload's format of `shellcode`, architecture of `x64`, and os of `windows` WHEN this wrapper's own build parameter of `arch` is `x64`
+* no other payload requirements, so it supports no other options
+
+```python3 Python3 Example in wrapper payload definition
+wrapper_payload_requirements = [
+    WrapperPayloadRequirement(
+        requires=WrapperPayloadRequirementRequires(
+            format=PayloadBuildMetadataFormat.Shellcode,
+            architecture=PayloadBuildMetadataArchitecture.X64,
+            os=SupportedOS.Windows,
+        ),
+        when=[WrapperPayloadRequirementWhen(
+            build_parameter_name="arch",
+            build_parameter_value="x64",
+        )]
+    )
+]
+```
+
+A payload that supports this might do the following:
+```python Payload build metadata
+resp = BuildResponse(status=BuildStatus.Error)
+resp.build_metadata = PayloadBuildMetadata(
+    architecture=PayloadBuildMetadataArchitecture.X64,
+    format=PayloadBuildMetadataFormat.Exe if output_type == "WinExe" or output_type == "Service" else PayloadBuildMetadataFormat.Shellcode if output_type == "Shellcode" else "Source"
+)
+```
+Here we see that this payload is settings its architecture to `x64` and setting its `format` to `exe`, `shellcode`, or `source`.
+The builder doesn't need to specify the `os` because Mythic already knows it based on the parameters the user selected when building the payload.
+
+Existing wrapper payload types must migrate their definitions.
+Normal payload builders should return metadata so compatible payload discovery is accurate.
+
+### Legacy browser-script renderers were removed
+
+The legacy `screenshot`, `download`, and `search` browser-script result renderers were removed.
+Return supported plaintext, table, or media structures and use current authenticated file/media URLs.
+The obsolete operation-specific browser-script mapping table and legacy payload/C2/translation resync send paths were also removed.
+
+### Process Browser
+
+The format for messages from the agent for the process browser changed.
+The idea is for a very small change to lift out three frequently repeated fields into more generic metadata.
+
+```json Mythic v3.4
+{
+    "action": "post_response",
+    "responses": [
+        {
+            "task_id": "uuid",
+            "processes": [
+                {
+                    "process_id": 5,
+                    "parent_process_id": 2,
+                    "update_deleted": true,
+                    "host": "workstation1",
+                    "os": "windows",
+                }
+            ]
+        }
+    ]
+}
+```
+```json Mythic v4.0
+{
+    "action": "post_response",
+    "responses": [
+        {
+            "task_id": "uuid",
+            "processes": {
+                "host": "workstation1",
+                "os": "windows",
+                "update_deleted": true,
+                "processes": [
+                     {
+                         "process_id": 5,
+                         "parent_process_id": 2,
+                     }
+                 ]
+            }
+        }
+    ]
+}
+```
+
+### C2 Profile File Host Changes
+
+Mythic 3.4 would send a single file at a time to be hosted by a C2 profile with just add/remove, the path, and a file_id.
+With Mythic 4.0, there are no more blanket allows for downloading files if you know the UUID.
+Mythic now sends a single message to the host file function for a C2 profile with _all_ of the files.
+Each file has its own add/remove state, path, agent_file_id _and_ a download token. That download token must be passed as an `Authorization: Bearer <token>` value with the download request.
+These tokens are scoped specifically to the associated `agent_file_id` value, so you can only ever download one file with it.
+These tokens are also not permanently saved by Mythic, so a reboot will generate new tokens that the C2 profile must update internally.
+
+## New v4 capabilities
+
+- **Operation chat** supports standard channels and AI-backed chat containers, streaming responses, cancellation, search, message edits, tool output, approvals, input requests, and delegated sub-agent views.
+- **Operator aliases** provide command and generic aliases, optional payload type or chat-container scope, nesting, and import/export.
+- **Task references** expand `@cred` and `@link` values before tasking and record the resolution on the task.
+- **Parameters** add display names, display labels for choices, richer hide conditions, dynamic C2 choices, complex dynamic choices, `other_parameters`, and `JSONString` parameters with inline schemas.
+- **Eventing** steps can pause for approval or typed runtime input and resume with the operator's response.
+- **File transfers** can use byte offsets, report byte-level progress, and resume from the next missing chunk or offset.
+    - Instead of reporting `total_chunks`, `chunk_size`, and `chunk_num`, agents can now optionally report `total_size` and `chunk_offset` for variable chunks when download (agent -> mythic) files.
+    - Agents can report back in the `download` key a `file_id` and `resume: true` - Mythic will tell the agent the transfer type that the file started with (chunk or offset) and the next chunk_num/chunk_offset that it's expecting.
+- **File editing** adds an interactive, versioned UTF-8 text editor with conflict detection, staged previews, refresh, force-overwrite, and close actions.
+- **Credentials** add subtype, structured identity and metadata, custom display values, updates, validity tracking, and dedicated JWT/Kerberos renderers.
+- **C2 file hosting** is tracked and can be updated, retried, stopped, or removed.
+- **Agent RPC** lets an agent make asynchronous command specific requests through its container.
+- **Custom RPC timeouts** can be extended with `custom_rpc_timeout` without retrying duplicate work.
+
+See the linked v4 operator and development pages for the new JSON and language-specific examples.
+
+## Rollback
+
+Do not point v3.4 services at a database after v4 migrations have run. To roll back, stop Mythic, restore the v3.4 code, restore the pre-upgrade database and file backups, rebuild `mythic-cli`, and start the old version. Recreate any external configuration changes made after the backup separately.

@@ -1,0 +1,50 @@
+---
+title: "Hasura Console"
+description: "Explore and test Mythic 4.0 GraphQL queries, mutations, and subscriptions."
+---
+
+Open **Services → GraphQL Console** from Mythic's main menu. The console is intended for schema exploration and administrative troubleshooting; scripts should connect to Mythic's proxied `/graphql` endpoint with a scoped Bearer token.
+
+To sign in to the administrative console, retrieve the local Hasura secret on the Mythic host:
+
+```bash
+sudo ./mythic-cli config get hasura_secret
+```
+
+<Warning>
+The Hasura admin secret bypasses normal row permissions and API-token scopes. Do not embed it in integrations or share it as an operator credential.
+</Warning>
+
+## Explore the schema
+
+Use the **API** tab's documentation explorer to inspect current fields and input types. This is especially important for v4 action changes: action names are camelCase, `/api/v1.4` is gone, and public actions generally use operation-scoped display IDs.
+
+Test authentication against the proxied API with `whoami`:
+
+```graphql
+query CurrentIdentity {
+  whoami {
+    status
+    error
+    username
+    current_operation_id
+    scopes
+  }
+}
+```
+
+An example scoped table query is:
+
+```graphql
+query RecentTasks {
+  task(order_by: {timestamp: desc}, limit: 20) {
+    display_id
+    command_name
+    status
+    operator { username }
+    callback { display_id host user }
+  }
+}
+```
+
+Copy the generated operation into your GraphQL client, then use `Authorization: Bearer <token>` against `https://MYTHIC_HOST:7443/graphql`.

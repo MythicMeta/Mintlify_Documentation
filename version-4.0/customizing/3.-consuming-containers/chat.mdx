@@ -1,0 +1,104 @@
+---
+title: "Chat Containers"
+description: "Build provider-neutral AI chat services for Mythic operation channels"
+---
+
+A chat container receives an operator prompt, calls a model or tool system, and streams structured responses back to a Mythic AI chat channel. The Python `mythic-container` library provides the v4 chat base class and response helpers.
+
+## Minimal container
+
+```python
+from mythic_container.ChatBase import (
+    Chat,
+    ChatConfigView,
+    ChatModelDefinition,
+    ChatModelMetadata,
+    ChatRequest,
+    ChatSecretView,
+)
+
+class MyChat(Chat):
+    name = "my_chat"
+    description = "Example provider-backed chat container"
+    semver = "0.1.0"
+    models = [
+        ChatModelDefinition(
+            Name="My Provider",
+            Description="Streams responses from My Provider",
+            Metadata=ChatModelMetadata(Provider="my-provider"),
+        )
+    ]
+
+    async def chat(self, msg: ChatRequest) -> None:
+        config = ChatConfigView.from_request(msg)
+        secrets = ChatSecretView.from_request(msg)
+        api_key = secrets.required_text("MY_PROVIDER_API_KEY")
+        model = config.text("MY_PROVIDER_MODEL", "default-model")
+        response_key = f"assistant:my-provider:{msg.RequestID}"
+
+        await self.send_streaming(msg, response_key, metadata={"model": model})
+        async for delta in stream_provider(api_key, model, msg.Prompt):
+            await self.send_delta(msg, response_key, delta, metadata={"model": model})
+        await self.send_complete(msg, response_key, complete_request=True)
+```
+
+One `chat(msg)` call handles one Mythic request. An approval or input continuation arrives as a new `ChatRequest`, not as a callback into the old coroutine.
+
+## Request shape
+
+```json
+{
+  "container_name": "my_chat",
+  "operation_id": 7,
+  "channel_id": 44,
+  "apitokens_id": 91,
+  "request_id": 1234,
+  "model": "My Provider",
+  "prompt": "Summarize active callbacks",
+  "config": {"MY_PROVIDER_MODEL": "model-a"},
+  "secrets": {"MY_PROVIDER_API_KEY": {"value": "..."}},
+  "context": [],
+  "slash_command": null,
+  "input_response": null,
+  "delegation_id": "",
+  "delegation_name": ""
+}
+```
+
+Never copy secrets or Bearer tokens into response content or metadata.
+
+## Streaming response shape
+
+```json
+{
+  "operation_id": 7,
+  "request_id": 1234,
+  "response_key": "assistant:my-provider:1234",
+  "content": "partial text",
+  "is_delta": true,
+  "complete": false,
+  "complete_request": false,
+  "status": "streaming",
+  "error": "",
+  "metadata": {"provider": "my-provider", "model": "model-a"}
+}
+```
+
+Reuse one `response_key` for updates to the same visible block. Use another key for tool cards, approval cards, or a separate final answer.
+
+## Human-in-the-loop and tools
+
+Well-known `metadata.special_type` values let Mythic render native UI:
+
+- `tool_use` for tool progress and lazily fetched full output;
+- `mcp_tool_confirmation` for an approval before a write-capable MCP call;
+- `input_requested` for free-form or choice-based operator input;
+- `subagent` for delegated work grouped by `delegation_id`.
+
+When a tool requires approval, finish the current request after sending the confirmation card. If approved, Mythic sends a new request containing the confirmed tool call. Rebuild typed configuration and run only that approved call.
+
+## Cancellation
+
+The library tracks active request tasks and cancels them when Mythic sends a cancellation. Provider clients should propagate cancellation to their HTTP/streaming call and avoid sending a second terminal completion after cancellation.
+
+For a complete reference implementation, use the `basic_chat` example and the `CHAT_CONTAINERS.md` guide in the `MythicContainerPyPi` repository matching your installed library version.
