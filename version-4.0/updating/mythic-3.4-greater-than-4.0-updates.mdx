@@ -298,7 +298,7 @@ The idea is for a very small change to lift out three frequently repeated fields
 ### SendMythicRPCAgentStorageCreate
 
 A typo in the Python PyPi name for the `SendMythicRPCAgentstorageCreateMessage` is updated to `SendMythicRPCAgentStorageCreateMessage`.
-Notice the small `s` in `storage` initially is updated to a capital `S` now. 
+Notice the small `s` in `storage` initially is updated to a capital `S` now.
 
 ### C2 Profile File Host Changes
 
@@ -308,6 +308,16 @@ Mythic now sends a single message to the host file function for a C2 profile wit
 Each file has its own add/remove state, path, agent_file_id _and_ a download token. That download token must be passed as an `Authorization: Bearer <token>` value with the download request.
 These tokens are scoped specifically to the associated `agent_file_id` value, so you can only ever download one file with it.
 These tokens are also not permanently saved by Mythic, so a reboot will generate new tokens that the C2 profile must update internally.
+
+### Testing old containers with new changes
+
+If you want to use a base container for an older version of mythic, like `itsafeaturemythic/mythic_python_go:latest`, but want to test stuff out for v4, you can make the following changes to your `Dockerfile`:
+
+```bash Dockerfile
+FROM itsafeaturemythic/mythic_python_go:latest
+RUN pip3 install mythic_container==0.7.0rc9
+RUN pip3 install --upgrade --force-reinstall grpcio>=1.78.0
+```
 
 ## New v4 capabilities
 
@@ -326,6 +336,11 @@ These tokens are also not permanently saved by Mythic, so a reboot will generate
 - **Custom RPC timeouts** can be extended with `custom_rpc_timeout` without retrying duplicate work.
 
 See the linked v4 operator and development pages for the new JSON and language-specific examples.
+
+## Mythic-v4.0.0
+
+To make things easier for users, if you're testing some public updates for Mythic v4.0, I request that you make your changes in a branch called `Mythic-v4.0.0`.
+This makes it so that users are always able to install Mythic v4 compatible versions with the same `-b Mythic-v4.0.0` command line argument. 
 
 ## Rollback
 
