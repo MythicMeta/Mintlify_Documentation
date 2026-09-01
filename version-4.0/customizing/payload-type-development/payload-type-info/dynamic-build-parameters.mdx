@@ -220,9 +220,10 @@ The C2ParameterDeviation object has a few fields:
 * `choices` - your own set of choices instead of those that are provided
 * `dictionary_choices` - your own set of dictionary choice objects instead of what's normally provided
 
-## Mythic 4.0 parameter additions
+## Dynamic Parameters and Mythic 4.0 parameter additions
 
-Build parameters can now separate stable wire values from labels shown to operators, control UI order, query choices dynamically, and collect structured JSON strings.
+Build parameters can set different values and labels shown to operators, control UI order, query choices dynamically, and collect structured JSON strings.
+Dynamic Query Parameters are executed when the parameter is first shown to the user, but comes with a special button to re-run and update the choices at will.
 
 ```python
 from mythic_container.PayloadBuilder import (
@@ -239,6 +240,7 @@ async def query_targets(
     environment = msg.OtherParameters.get("environment", "production")
     return PTRPCDynamicQueryBuildParameterFunctionMessageResponse(
         Success=True,
+        # set Choices=[specific set of strings] or ComplexChoices to set unique display and actual values
         ComplexChoices=[
             ComplexChoice(DisplayValue=f"Primary ({environment})", Value="primary"),
             ComplexChoice(DisplayValue=f"Backup ({environment})", Value="backup"),
@@ -265,11 +267,12 @@ build_parameters = [
 ]
 ```
 
-`OtherParameters` contains the other values currently selected in the build form, which lets a dynamic query return choices conditioned on prior input. Return `Choices` for identical display/wire strings or `ComplexChoices` for independent `DisplayValue` and `Value` fields.
+`OtherParameters` contains the other values currently selected in the build form, which lets a dynamic query return choices conditioned on prior input.
+Return `Choices` for identical Display Value and actual value strings or `ComplexChoices` for independent `DisplayValue` and `Value` fields.
 
 The complete v4 fields added to these definitions are:
 
-- `display_name` — human-readable label; `name` remains the stable build key
+- `display_name` — custom display name to show in the UI; `name` remains the stable build key
 - `choices_display_names` — map stored choice values to UI labels
 - `ui_position` — explicit ordering within a group
 - `dynamic_query_function` — populate `ChooseOne` or `ChooseMultiple` values when the form needs them
@@ -279,4 +282,5 @@ See [JSONString Parameters](/version-4.0/customizing/payload-type-development/pa
 
 ### Expanded hide-condition operands
 
-In addition to `eq`, `neq`, `in`, and `nin`, v4 supports numeric comparisons `lt`, `gt`, `lte`, and `gte`, and string tests `sw` (starts with), `ew` (ends with), `co` (contains), and `nco` (does not contain). Multiple conditions remain ORed: if any condition matches, Mythic hides the parameter.
+In addition to `eq`, `neq`, `in`, and `nin`, v4 supports numeric comparisons `lt`, `gt`, `lte`, and `gte`, and string tests `sw` (starts with), `ew` (ends with), `co` (contains), and `nco` (does not contain).
+Multiple conditions remain OR-ed: if any condition matches, Mythic hides the parameter.
