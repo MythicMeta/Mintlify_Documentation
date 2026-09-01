@@ -278,6 +278,48 @@ The complete v4 fields added to these definitions are:
 - `dynamic_query_function` — populate `ChooseOne` or `ChooseMultiple` values when the form needs them
 - `json_string_schema` — drive synchronized visual/source editing for `BuildParameterType.JSONString`
 
+The following is the class for the message sent to the dynamic query function, so you can see that you get access to the selected os, any other parameter values, the parameter name that's doing this query (in case you're using the same function for multiple parameters), and any user-defiend secrets.
+
+```python
+class PTRPCDynamicQueryBuildParameterFunctionMessage:
+    """Request to dynamically generate choices for a modal in the UI with a ChooseOne or ChooseMultiple parameter type.
+
+    Attributes:
+        ParameterName (str): Name of the parameter
+        PayloadType (str): Name of the PayloadType
+        SelectedOS (str): The selected OS when the backing payload for this callback was created
+        Secrets (dict): User secrets based on the operator that issued this action
+    Functions:
+        to_json(self): return dictionary form of class
+    """
+
+    def __init__(self,
+                 parameter_name: str,
+                 payload_type: str,
+                 selected_os: str = "",
+                 secrets: dict = {},
+                 other_parameters: dict = {},
+                 **kwargs
+                 ):
+        self.ParameterName = parameter_name
+        self.PayloadType = payload_type
+        self.SelectedOS = selected_os
+        self.Secrets = secrets
+        self.OtherParameters = other_parameters
+
+    def to_json(self):
+        return {
+            "parameter_name": self.ParameterName,
+            "payload_type": self.PayloadType,
+            "selected_os": self.SelectedOS,
+            "secrets": self.Secrets,
+            "other_parameters": self.OtherParameters
+        }
+
+    def __str__(self):
+        return json.dumps(self.to_json(), sort_keys=True, indent=2)
+```
+
 See [JSONString Parameters](/version-4.0/customizing/payload-type-development/payload-type-info/json-string-parameters) for schema examples.
 
 ### Expanded hide-condition operands
