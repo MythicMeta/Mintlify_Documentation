@@ -31,6 +31,8 @@ All configuration is done via the `mythic-cli` binary. However, to help with Git
 
 If you're running Mythic on macOS, instead of running `sudo make` run `sudo make macos` and you'll get an architecture appropriate machO binary to use.
 
+On Windows, use Docker Desktop's Linux containers mode to run Mythic's Linux images. [Enable host networking](https://docs.docker.com/engine/network/drivers/host/). Install GNU Make, then run `make windows` from the main Mythic folder to build `mythic-cli.exe`.
+
 ### Configure your installation
 
 Mythic configuration is all done via `Mythic/.env`, which means for your configuration you can either add/edit values there or add them to your environment.
